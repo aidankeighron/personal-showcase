@@ -1,8 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import MasonryList from '@react-native-seoul/masonry-list';
 import { ResizeMode, Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
-import { Button, FlatList, Image, Linking, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Button, Image, Linking, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 const MEDIA_KEY = '@MyPhotoGallery:mediaItems'; // A unique key for your app's data
@@ -162,9 +163,9 @@ export default function HomeScreen() {
         <Button onPress={() => setShowWebsite(true)} color={'purple'} title='Website' />
         <Button onPress={pickMedia} color={'purple'} title='Image' />
       </View>
-      <FlatList data={mediaItems} numColumns={2} keyExtractor={(item) => item.uri} 
+      <MasonryList data={mediaItems} numColumns={2} keyExtractor={(item) => item.uri} 
         contentContainerStyle={styles.gridContainer} ListFooterComponent={<View style={{height: 40}}></View>}
-        renderItem={({item}) => <MediaElement item={item} mediaItems={mediaItems} setMediaItems={setMediaItems} />} 
+        renderItem={({item}) => <MediaElement item={item as Media} mediaItems={mediaItems} setMediaItems={setMediaItems} />} 
       />
       <Modal animationType="fade" transparent={true} visible={showWebsite}
         onRequestClose={() => setShowWebsite(false)}>
@@ -210,7 +211,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginHorizontal: '2.5%',
     marginVertical: 10,
-    width: '45%',
     zIndex: 99,
   },
   mediaFullScreen: {
