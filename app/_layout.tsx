@@ -80,9 +80,9 @@ function MediaElement({item, mediaItems, setMediaItems}: MediaElementProps) {
     }} 
     onPress={() => { setFullScreen(!fullscreen) }}>
       {item.type === 'image' ? (
-        <Image source={{uri: item.uri}} style={styles.media} resizeMode='cover' />
+        <Image source={{uri: item.uri}} style={styles.media} resizeMode='contain' />
       ) : (
-        <Video source={{uri: item.uri}} isMuted={!fullscreen} resizeMode={ResizeMode.COVER}
+        <Video source={{uri: item.uri}} isMuted={!fullscreen} resizeMode={ResizeMode.CONTAIN}
           shouldPlay={true} isLooping style={styles.media} useNativeControls={false} />
       )}
       <Modal animationType="fade" transparent={true} visible={showDeleteConfirm}
@@ -126,7 +126,9 @@ export default function HomeScreen() {
     if (!result.canceled) {
       const selectedAssets = result.assets.map(asset => ({
         uri: asset.uri, type: asset.type,
-        width: asset.width, height: asset.height,
+        // Videos are flipped?
+        width: asset.type === 'video' ? asset.height : asset.width, 
+        height: asset.type === 'video' ? asset.width : asset.height,
         id: asset.assetId || Date.now().toString() + Math.random().toString(),
       }));
       console.log('Selected media assets:', selectedAssets);
