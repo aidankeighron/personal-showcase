@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ResizeMode, Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
-import { Button, FlatList, Image, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Button, FlatList, Image, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 
 const MEDIA_KEY = '@MyPhotoGallery:mediaItems'; // A unique key for your app's data
 const backgroundColor = '#1E1F22';
@@ -63,6 +63,7 @@ type MediaElementProps = {
 function MediaElement({item, mediaItems, setMediaItems}: MediaElementProps) {
   const [fullscreen, setFullScreen] = useState<boolean>(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  const {width: screenWidth} = useWindowDimensions();
 
   const deleteItem = () => {
     const filteredItems = mediaItems.filter(i => i.id !== item.id);
@@ -71,21 +72,21 @@ function MediaElement({item, mediaItems, setMediaItems}: MediaElementProps) {
   }
 
   return (
-    <TouchableOpacity style={fullscreen ? styles.mediaFullScreen : styles.mediaContainer} onLongPress={() => {
+    <TouchableOpacity style={[fullscreen ? styles.mediaFullScreen : styles.mediaContainer, {
+      height: (screenWidth*(fullscreen ? 0.95 : 0.45)) * item.height/item.width,
+    }]} 
+    onLongPress={() => {
       setShowDeleteConfirm(true);
-    }} onPress={() => { setFullScreen(!fullscreen) }}>
+    }} 
+    onPress={() => { setFullScreen(!fullscreen) }}>
       {item.type === 'image' ? (
         <Image source={{uri: item.uri}} style={styles.media} resizeMode='cover' />
       ) : (
         <Video source={{uri: item.uri}} isMuted={!fullscreen} resizeMode={ResizeMode.COVER}
           shouldPlay={true} isLooping style={styles.media} useNativeControls={false} />
       )}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={showDeleteConfirm}
-        onRequestClose={() => setShowDeleteConfirm(false)}
-      >
+      <Modal animationType="fade" transparent={true} visible={showDeleteConfirm}
+        onRequestClose={() => setShowDeleteConfirm(false)}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <View style={styles.modalButtonContainer}>
@@ -163,7 +164,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     width: '45%',
     zIndex: 99,
-    height: 200,
   },
   mediaFullScreen: {
     borderRadius: 5,
@@ -172,7 +172,6 @@ const styles = StyleSheet.create({
     marginHorizontal: '2.5%',
     position: 'absolute',
     zIndex: 100,
-    height: 400,
   },
   media: {
     width: '100%',
