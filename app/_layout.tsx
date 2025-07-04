@@ -61,9 +61,10 @@ type MediaElementProps = {
   item: Media,
   mediaItems: Media[],
   setMediaItems: React.Dispatch<React.SetStateAction<Media[]>>,
+  setFullscreenItem: React.Dispatch<React.SetStateAction<Media | null>>,
 }
 
-function MediaElement({index, item, mediaItems, setMediaItems}: MediaElementProps) {
+function MediaElement({index, item, mediaItems, setMediaItems, setFullscreenItem}: MediaElementProps) {
   const [showElementModal, setShowElementModal] = useState<boolean>(false);
   const [order, setOrder] = useState<string>(index.toString());
   const {width: screenWidth} = useWindowDimensions();
@@ -126,7 +127,7 @@ function MediaElement({index, item, mediaItems, setMediaItems}: MediaElementProp
         Linking.openURL(item.uri);
       }
       else {
-        // TODO Fullscreen
+        setFullscreenItem(item);
       }
     }}>
       {displayMedia()}
@@ -157,6 +158,7 @@ export default function HomeScreen() {
   const [mediaItems, setMediaItems] = useState<Media[]>([]);
   const [showWebsite, setShowWebsite] = useState<boolean>(false);
   const [website, setWebsite] = useState<string>("");
+  const [fullscreenItem, setFullscreenItem] = useState<Media | null>(null);
 
   useEffect(() => {
     const fetchStoredMedia = async () => {
@@ -190,6 +192,18 @@ export default function HomeScreen() {
     }
   };
 
+  const renderFullscreen = (item: Media) => {
+    switch (item.type) {
+      case 'image':
+        return <Image source={{uri: item.uri}} style={styles.media} resizeMode="contain" />
+      case 'website':
+        return <></>
+      default:
+        return <Video source={{uri: item.uri}} isMuted={false} resizeMode={ResizeMode.CONTAIN}
+            shouldPlay={true} isLooping useNativeControls style={styles.media} />
+    }
+  };
+
   return (
     <SafeAreaView style={styles.AndroidSafeArea}>
       <View style={[styles.modalButtonContainer, {justifyContent: 'center'}]}>
@@ -198,8 +212,12 @@ export default function HomeScreen() {
       </View>
       <MasonryList data={mediaItems} numColumns={2} keyExtractor={(item) => item.uri} 
         contentContainerStyle={styles.gridContainer} ListFooterComponent={<View style={{height: 40}}></View>}
-        renderItem={({item, i}) => <MediaElement index={i} item={item as Media} mediaItems={mediaItems} setMediaItems={setMediaItems} />} 
+        renderItem={({item, i}) => <MediaElement index={i} item={item as Media} mediaItems={mediaItems}
+          setMediaItems={setMediaItems} setFullscreenItem={setFullscreenItem} />} 
       />
+      {fullscreenItem && <TouchableOpacity onPress={() => setFullscreenItem(null)} style={styles.fullScreenContainer}>
+        {renderFullscreen(fullscreenItem)}
+      </TouchableOpacity>}
       <Modal animationType="fade" transparent={true} visible={showWebsite}
         onRequestClose={() => setShowWebsite(false)}>
         <View style={styles.centeredView}>
@@ -248,6 +266,11 @@ const styles = StyleSheet.create({
   media: {
     width: '100%',
     height: '100%',
+  },
+  fullScreenContainer: {
+    backgroundColor: 'black',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalButtonContainer: {
     flexDirection: 'row',
