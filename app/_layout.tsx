@@ -2,7 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ResizeMode, Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
-import { Button, FlatList, Image, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Button, FlatList, Image, Linking, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 
 const MEDIA_KEY = '@MyPhotoGallery:mediaItems'; // A unique key for your app's data
 const backgroundColor = '#1E1F22';
@@ -10,7 +11,7 @@ const backgroundColor = '#1E1F22';
 type Media = {
   id: string,
   uri: string,
-  type: "image" | "video" | "livePhoto" | "pairedVideo" | undefined,
+  type: "image" | "video" | "livePhoto" | "pairedVideo" | "website" | undefined,
   width: number,
   height: number,
 }
@@ -71,6 +72,18 @@ function MediaElement({item, mediaItems, setMediaItems}: MediaElementProps) {
     saveMediaItems(filteredItems);
   }
 
+  const displayMedia = () => {
+    switch (item.type) {
+      case 'website':
+        return <WebView source={{uri: item.uri}} style={styles.media} />
+      case 'image':
+        return <Image source={{uri: item.uri}} style={styles.media} resizeMode='contain' />
+      default:
+        return <Video source={{uri: item.uri}} isMuted={!fullscreen} resizeMode={ResizeMode.CONTAIN}
+          shouldPlay={true} isLooping style={styles.media} useNativeControls={false} />
+    }
+  }
+
   return (
     <TouchableOpacity style={[fullscreen ? styles.mediaFullScreen : styles.mediaContainer, {
       height: (screenWidth*(fullscreen ? 0.95 : 0.45)) * item.height/item.width,
@@ -78,13 +91,16 @@ function MediaElement({item, mediaItems, setMediaItems}: MediaElementProps) {
     onLongPress={() => {
       setShowDeleteConfirm(true);
     }} 
-    onPress={() => { setFullScreen(!fullscreen) }}>
-      {item.type === 'image' ? (
-        <Image source={{uri: item.uri}} style={styles.media} resizeMode='contain' />
-      ) : (
-        <Video source={{uri: item.uri}} isMuted={!fullscreen} resizeMode={ResizeMode.CONTAIN}
-          shouldPlay={true} isLooping style={styles.media} useNativeControls={false} />
-      )}
+    onPress={() => {
+      if (item.type === 'website') {
+        // TODO web view
+        Linking.openURL(item.uri);
+      }
+      else {
+        setFullScreen(!fullscreen) 
+      }
+    }}>
+      {displayMedia()}
       <Modal animationType="fade" transparent={true} visible={showDeleteConfirm}
         onRequestClose={() => setShowDeleteConfirm(false)}>
         <View style={styles.centeredView}>
@@ -105,6 +121,8 @@ function MediaElement({item, mediaItems, setMediaItems}: MediaElementProps) {
 
 export default function HomeScreen() {
   const [mediaItems, setMediaItems] = useState<Media[]>([]);
+  const [showWebsite, setShowWebsite] = useState<boolean>(false);
+  const [website, setWebsite] = useState<string>("");
 
   useEffect(() => {
     const fetchStoredMedia = async () => {
@@ -124,7 +142,7 @@ export default function HomeScreen() {
     });
 
     if (!result.canceled) {
-      const selectedAssets = result.assets.map(asset => ({
+      const selectedAssets: Media[] = result.assets.map(asset => ({
         uri: asset.uri, type: asset.type,
         // Videos are flipped?
         width: asset.type === 'video' ? asset.height : asset.width, 
@@ -140,22 +158,50 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.AndroidSafeArea}>
-      <Button onPress={pickMedia} color={'purple'} title='Pick' />
-      <FlatList data={mediaItems} numColumns={2} keyExtractor={(item) => item.uri} contentContainerStyle={styles.gridContainer}
+      <View style={[styles.modalButtonContainer, {justifyContent: 'center'}]}>
+        <Button onPress={() => setShowWebsite(true)} color={'purple'} title='Website' />
+        <Button onPress={pickMedia} color={'purple'} title='Image' />
+      </View>
+      <FlatList data={mediaItems} numColumns={2} keyExtractor={(item) => item.uri} 
+        contentContainerStyle={styles.gridContainer} ListFooterComponent={<View style={{height: 40}}></View>}
         renderItem={({item}) => <MediaElement item={item} mediaItems={mediaItems} setMediaItems={setMediaItems} />} 
       />
+      <Modal animationType="fade" transparent={true} visible={showWebsite}
+        onRequestClose={() => setShowWebsite(false)}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <TextInput style={styles.websiteInput} value={website} onChangeText={setWebsite} />
+            <View style={styles.modalButtonContainer}>
+              <Button title='Add' onPress={() => {
+                const newWebsite: Media = {
+                  uri: website, type: 'website',
+                  width: 100, 
+                  height: 100,
+                  id: Date.now().toString() + Math.random().toString(),
+                };
+                console.log('Added website:', newWebsite);
+                const updatedMediaItems = [...mediaItems, newWebsite];
+                setMediaItems(updatedMediaItems);
+                saveMediaItems(updatedMediaItems);
+                setShowWebsite(false);
+              }} />
+              <Button onPress={() => setShowWebsite(false)} title='Cancel' />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   AndroidSafeArea: {
+    display: 'flex',
     flex: 1,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     backgroundColor: backgroundColor,
   },
   gridContainer: {
-    height: '100%',
     width: '100%',
     marginVertical: 10,
   },
@@ -184,7 +230,15 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 100,
   },
-   centeredView: {
+  websiteInput: {
+    color: 'black',
+    backgroundColor: 'white',
+    width: 200,
+    borderRadius: 10,
+    marginBottom: 15,
+    fontSize: 18,
+  },
+  centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
