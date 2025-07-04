@@ -109,7 +109,8 @@ function MediaElement({index, item, mediaItems, setMediaItems, setFullscreenItem
         return reorderedItems;
       });
       setShowElementModal(false);
-    } else {
+    } 
+    else {
       alert('Please enter a valid index within the current range.');
     }
   };
@@ -124,6 +125,7 @@ function MediaElement({index, item, mediaItems, setMediaItems, setFullscreenItem
     onPress={() => {
       if (item.type === 'website') {
         // TODO web view
+        // TODO border radius
         Linking.openURL(item.uri);
       }
       else {
@@ -261,11 +263,11 @@ const styles = StyleSheet.create({
   },
   mediaContainer: {
     margin: 5,
-    // TODO border radius
   },
   media: {
     width: '100%',
     height: '100%',
+    borderRadius: 5,
   },
   fullScreenContainer: {
     backgroundColor: 'black',
