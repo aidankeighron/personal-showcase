@@ -87,7 +87,7 @@ function MediaElement({item, mediaItems, setMediaItems}: MediaElementProps) {
 
   return (
     <TouchableOpacity style={[fullscreen ? styles.mediaFullScreen : styles.mediaContainer, {
-      height: (screenWidth*(fullscreen ? 0.95 : 0.45)) * item.height/item.width,
+      height: (screenWidth*(fullscreen ? 0.95 : 0.5)) * item.height/item.width,
     }]} 
     onLongPress={() => {
       setShowDeleteConfirm(true);
@@ -197,6 +197,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   AndroidSafeArea: {
+    margin: 0,
+    padding: 0,
     display: 'flex',
     flex: 1,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
@@ -207,11 +209,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   mediaContainer: {
-    borderRadius: 5,
-    overflow: 'hidden',
-    marginHorizontal: '2.5%',
-    marginVertical: 10,
-    zIndex: 99,
   },
   mediaFullScreen: {
     borderRadius: 5,
@@ -219,7 +216,6 @@ const styles = StyleSheet.create({
     width: '95%',
     marginHorizontal: '2.5%',
     position: 'absolute',
-    zIndex: 100,
   },
   media: {
     width: '100%',
