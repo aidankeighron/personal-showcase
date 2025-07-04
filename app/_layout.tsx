@@ -57,14 +57,15 @@ async function requestPermissions() {
 }
 
 type MediaElementProps = {
+  index: number,
   item: Media,
   mediaItems: Media[],
-  setMediaItems: any,
+  setMediaItems: React.Dispatch<React.SetStateAction<Media[]>>,
 }
 
-function MediaElement({item, mediaItems, setMediaItems}: MediaElementProps) {
-  const [fullscreen, setFullScreen] = useState<boolean>(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+function MediaElement({index, item, mediaItems, setMediaItems}: MediaElementProps) {
+  const [showElementModal, setShowElementModal] = useState<boolean>(false);
+  const [order, setOrder] = useState<string>(index.toString());
   const {width: screenWidth} = useWindowDimensions();
 
   const deleteItem = () => {
@@ -80,17 +81,44 @@ function MediaElement({item, mediaItems, setMediaItems}: MediaElementProps) {
       case 'image':
         return <Image source={{uri: item.uri}} style={styles.media} resizeMode='contain' />
       default:
-        return <Video source={{uri: item.uri}} isMuted={!fullscreen} resizeMode={ResizeMode.CONTAIN}
+        return <Video source={{uri: item.uri}} isMuted={true} resizeMode={ResizeMode.CONTAIN}
           shouldPlay={true} isLooping style={styles.media} useNativeControls={false} />
     }
   }
 
+  const handleReorder = () => {
+    const newIndex = parseInt(order, 10);
+    if (!isNaN(newIndex)) {
+      setMediaItems((currentItems) => {
+        const itemToMove = currentItems.find((i) => i.id === item.id);
+        if (!itemToMove) {
+          return currentItems;
+        }
+
+        const filteredItems = currentItems.filter((i) => i.id !== item.id);
+        const targetIndex = Math.min(Math.max(0, newIndex), filteredItems.length);
+
+        const reorderedItems = [
+          ...filteredItems.slice(0, targetIndex),
+          itemToMove,
+          ...filteredItems.slice(targetIndex),
+        ];
+
+        saveMediaItems(reorderedItems);
+        return reorderedItems;
+      });
+      setShowElementModal(false);
+    } else {
+      alert('Please enter a valid index within the current range.');
+    }
+  };
+
   return (
-    <TouchableOpacity style={[fullscreen ? styles.mediaFullScreen : styles.mediaContainer, {
-      height: (screenWidth*(fullscreen ? 0.95 : 0.5)) * item.height/item.width,
+    <TouchableOpacity style={[styles.mediaContainer, {
+      height: (screenWidth/2 - 10) * item.height/item.width,
     }]} 
     onLongPress={() => {
-      setShowDeleteConfirm(true);
+      setShowElementModal(true);
     }} 
     onPress={() => {
       if (item.type === 'website') {
@@ -98,20 +126,25 @@ function MediaElement({item, mediaItems, setMediaItems}: MediaElementProps) {
         Linking.openURL(item.uri);
       }
       else {
-        setFullScreen(!fullscreen) 
+        // TODO Fullscreen
       }
     }}>
       {displayMedia()}
-      <Modal animationType="fade" transparent={true} visible={showDeleteConfirm}
-        onRequestClose={() => setShowDeleteConfirm(false)}>
+      <Modal animationType="fade" transparent={true} visible={showElementModal}
+        onRequestClose={() => setShowElementModal(false)}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
+            <TextInput value={order} onChangeText={setOrder} style={styles.websiteInput}  />
             <View style={styles.modalButtonContainer}>
               <Button title='Delete' onPress={() => {
                 deleteItem();
-                setShowDeleteConfirm(false);
+                setShowElementModal(false);
               }} />
-              <Button onPress={() => setShowDeleteConfirm(false)} title='Cancel' />
+              <Button title='Reorder' onPress={() => {
+                handleReorder();
+                setShowElementModal(false);
+              }} />
+              <Button onPress={() => { setShowElementModal(false) }} title='Cancel' />
             </View>
           </View>
         </View>
@@ -165,7 +198,7 @@ export default function HomeScreen() {
       </View>
       <MasonryList data={mediaItems} numColumns={2} keyExtractor={(item) => item.uri} 
         contentContainerStyle={styles.gridContainer} ListFooterComponent={<View style={{height: 40}}></View>}
-        renderItem={({item}) => <MediaElement item={item as Media} mediaItems={mediaItems} setMediaItems={setMediaItems} />} 
+        renderItem={({item, i}) => <MediaElement index={i} item={item as Media} mediaItems={mediaItems} setMediaItems={setMediaItems} />} 
       />
       <Modal animationType="fade" transparent={true} visible={showWebsite}
         onRequestClose={() => setShowWebsite(false)}>
@@ -209,13 +242,8 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   mediaContainer: {
-  },
-  mediaFullScreen: {
-    borderRadius: 5,
-    overflow: 'hidden',
-    width: '95%',
-    marginHorizontal: '2.5%',
-    position: 'absolute',
+    margin: 5,
+    // TODO border radius
   },
   media: {
     width: '100%',
@@ -224,7 +252,7 @@ const styles = StyleSheet.create({
   modalButtonContainer: {
     flexDirection: 'row',
     width: '100%',
-    gap: 100,
+    gap: 30,
   },
   websiteInput: {
     color: 'black',
