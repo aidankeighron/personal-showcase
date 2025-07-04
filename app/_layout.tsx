@@ -2,15 +2,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ResizeMode, Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
-import { Button, FlatList, Image, Platform, SafeAreaView, StatusBar, StyleSheet, TouchableOpacity } from 'react-native';
+import { Button, FlatList, Image, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 const MEDIA_KEY = '@MyPhotoGallery:mediaItems'; // A unique key for your app's data
+const backgroundColor = '#1E1F22';
 
 type Media = {
-  uri: string;
-  type: "image" | "video" | "livePhoto" | "pairedVideo" | undefined;
-  width: number;
-  height: number;
+  id: string,
+  uri: string,
+  type: "image" | "video" | "livePhoto" | "pairedVideo" | undefined,
+  width: number,
+  height: number,
 }
 
 // Function to save your array of media item objects
@@ -60,19 +62,42 @@ type MediaElementProps = {
 
 function MediaElement({item, mediaItems, setMediaItems}: MediaElementProps) {
   const [fullscreen, setFullScreen] = useState<boolean>(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+
+  const deleteItem = () => {
+    const filteredItems = mediaItems.filter(i => i.id !== item.id);
+    setMediaItems(filteredItems);
+    saveMediaItems(filteredItems);
+  }
 
   return (
     <TouchableOpacity style={fullscreen ? styles.mediaFullScreen : styles.mediaContainer} onLongPress={() => {
-      const filteredItems = mediaItems.filter(i => i.uri !== item.uri);
-      setMediaItems(filteredItems);
-      saveMediaItems(filteredItems);
+      setShowDeleteConfirm(true);
     }} onPress={() => { setFullScreen(!fullscreen) }}>
       {item.type === 'image' ? (
-        <Image source={{uri: item.uri}} style={styles.media} resizeMode='center' />
+        <Image source={{uri: item.uri}} style={styles.media} resizeMode='cover' />
       ) : (
         <Video source={{uri: item.uri}} isMuted={!fullscreen} resizeMode={ResizeMode.COVER}
-          shouldPlay={true} isLooping style={styles.media} useNativeControls={fullscreen} />
+          shouldPlay={true} isLooping style={styles.media} useNativeControls={false} />
       )}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showDeleteConfirm}
+        onRequestClose={() => setShowDeleteConfirm(false)}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <View style={styles.modalButtonContainer}>
+              <Button title='Delete' onPress={() => {
+                deleteItem();
+                setShowDeleteConfirm(false);
+              }} />
+              <Button onPress={() => setShowDeleteConfirm(false)} title='Cancel' />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </TouchableOpacity>
   );
 }
@@ -101,6 +126,7 @@ export default function HomeScreen() {
       const selectedAssets = result.assets.map(asset => ({
         uri: asset.uri, type: asset.type,
         width: asset.width, height: asset.height,
+        id: asset.assetId || Date.now().toString() + Math.random().toString(),
       }));
       console.log('Selected media assets:', selectedAssets);
       const updatedMediaItems = [...mediaItems, ...selectedAssets];
@@ -123,7 +149,7 @@ const styles = StyleSheet.create({
   AndroidSafeArea: {
     flex: 1,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-    backgroundColor: '#1E1F22',
+    backgroundColor: backgroundColor,
   },
   gridContainer: {
     height: '100%',
@@ -134,8 +160,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     overflow: 'hidden',
     marginHorizontal: '2.5%',
+    marginVertical: 10,
     width: '45%',
     zIndex: 99,
+    height: 200,
   },
   mediaFullScreen: {
     borderRadius: 5,
@@ -144,9 +172,27 @@ const styles = StyleSheet.create({
     marginHorizontal: '2.5%',
     position: 'absolute',
     zIndex: 100,
+    height: 400,
   },
   media: {
     width: '100%',
     height: '100%',
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: 100,
+  },
+   centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalView: {
+    backgroundColor: 'grey',
+    borderRadius: 15,
+    alignItems: 'center',
+    padding: 30,
   },
 });
