@@ -4,19 +4,11 @@ import { ResizeMode, Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Button, Image, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { Button, Image, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import MediaElement from '../components/element';
+import { backgroundColor, Media } from '../util/constants';
 
 const MEDIA_KEY = '@MyPhotoGallery:mediaItems'; // A unique key for your app's data
-const backgroundColor = '#1E1F22';
-
-type Media = {
-  id: string,
-  uri: string,
-  type: "image" | "video" | "livePhoto" | "pairedVideo" | "website" | undefined,
-  width: number,
-  height: number,
-}
 
 // Function to save your array of media item objects
 async function saveMediaItems(items: Media[]) {
@@ -55,103 +47,6 @@ async function requestPermissions() {
     return false;
   }
   return true;
-}
-
-type MediaElementProps = {
-  index: number,
-  item: Media,
-  mediaItems: Media[],
-  setMediaItems: React.Dispatch<React.SetStateAction<Media[]>>,
-  setFullscreenItem: React.Dispatch<React.SetStateAction<Media | null>>,
-}
-
-function MediaElement({index, item, mediaItems, setMediaItems, setFullscreenItem}: MediaElementProps) {
-  const [showElementModal, setShowElementModal] = useState<boolean>(false);
-  const [order, setOrder] = useState<string>(index.toString());
-  const {width: screenWidth} = useWindowDimensions();
-  
-  const deleteItem = () => {
-    const filteredItems = mediaItems.filter(i => i.id !== item.id);
-    setMediaItems(filteredItems);
-    saveMediaItems(filteredItems);
-  }
-
-  const displayMedia = () => {
-    const cardWidth = 100; // Your desired card width
-    const initialScale = cardWidth / screenWidth;
-    const injectedJavaScript = `
-      const meta = document.createElement('meta');
-      meta.setAttribute('name', 'viewport');
-      meta.setAttribute('content', 'width=${screenWidth}, initial-scale=${initialScale}, maximum-scale=${initialScale}, user-scalable=no');
-      document.getElementsByTagName('head')[0].appendChild(meta);
-      true; // Important for Android to ensure the script runs
-    `;
-
-    switch (item.type) {
-      case 'website':
-        return <WebView source={{uri: item.uri}} style={styles.media} pointerEvents='none'
-        injectedJavaScript={injectedJavaScript} />
-      case 'image':
-        return <Image source={{uri: item.uri}} style={styles.media} resizeMode='contain' />
-      default:
-        return <Video source={{uri: item.uri}} isMuted={true} resizeMode={ResizeMode.CONTAIN}
-          shouldPlay={true} isLooping style={styles.media} useNativeControls={false} />
-    }
-  }
-
-  const handleReorder = () => {
-    const newIndex = parseInt(order, 10);
-    if (!isNaN(newIndex)) {
-      setMediaItems((currentItems) => {
-        const itemToMove = currentItems.find((i) => i.id === item.id);
-        if (!itemToMove) {
-          return currentItems;
-        }
-
-        const filteredItems = currentItems.filter((i) => i.id !== item.id);
-        const targetIndex = Math.min(Math.max(0, newIndex), filteredItems.length);
-
-        const reorderedItems = [
-          ...filteredItems.slice(0, targetIndex),
-          itemToMove,
-          ...filteredItems.slice(targetIndex),
-        ];
-
-        saveMediaItems(reorderedItems);
-        return reorderedItems;
-      });
-      setShowElementModal(false);
-    } 
-    else {
-      alert('Please enter a valid index within the current range.');
-    }
-  };
-
-  return (
-    <TouchableOpacity style={[styles.mediaContainer, {height: (screenWidth/2 - 10) * item.height/item.width}]}
-    onLongPress={() => { setShowElementModal(true) }} onPress={() => { setFullscreenItem(item) }}>
-      {displayMedia()}
-      <Modal animationType="fade" transparent={true} visible={showElementModal}
-        onRequestClose={() => setShowElementModal(false)}>
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <TextInput value={order} onChangeText={setOrder} style={styles.websiteInput}  />
-            <View style={styles.modalButtonContainer}>
-              <Button title='Delete' onPress={() => {
-                deleteItem();
-                setShowElementModal(false);
-              }} />
-              <Button title='Reorder' onPress={() => {
-                handleReorder();
-                setShowElementModal(false);
-              }} />
-              <Button onPress={() => { setShowElementModal(false) }} title='Cancel' />
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </TouchableOpacity>
-  );
 }
 
 export default function HomeScreen() {
@@ -216,7 +111,7 @@ export default function HomeScreen() {
       <MasonryList data={mediaItems} numColumns={2} keyExtractor={(item) => item.uri} 
         contentContainerStyle={styles.gridContainer} ListFooterComponent={<View style={{height: 40}}></View>}
         renderItem={({item, i}) => <MediaElement index={i} item={item as Media} mediaItems={mediaItems}
-          setMediaItems={setMediaItems} setFullscreenItem={setFullscreenItem} />} 
+          setMediaItems={setMediaItems} setFullscreenItem={setFullscreenItem} saveMediaItems={saveMediaItems} />} 
       />
       {fullscreenItem && <TouchableOpacity onPress={() => setFullscreenItem(null)} style={styles.fullScreenContainer}>
         {renderFullscreen(fullscreenItem)}
