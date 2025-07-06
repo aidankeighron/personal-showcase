@@ -1,7 +1,6 @@
-// import { ResizeMode, Video } from 'expo-av';
-import { useVideoPlayer, VideoView } from 'expo-video';
-import { useState } from 'react';
-import { Button, Image, Modal, StyleSheet, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import * as VideoThumbnails from 'expo-video-thumbnails';
+import { useEffect, useState } from 'react';
+import { Button, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Media } from '../util/constants';
 
@@ -19,15 +18,16 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
   const [showElementModal, setShowElementModal] = useState<boolean>(false);
   const [order, setOrder] = useState<string>(index.toString());
   const {width: screenWidth} = useWindowDimensions();
+  const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
   
   const itemWidth = item.rotation === 0 ? item.width : item.height;
   const itemHeight = item.rotation === 0 ? item.height : item.width;
 
-  const player = useVideoPlayer(item.uri, player => {
-    player.loop = true;
-    player.muted = true;
-    player.play();
-  });
+  useEffect(() => {
+    VideoThumbnails.getThumbnailAsync(item.uri, { time: 100 }).then(result => {
+      setVideoThumbnail(result.uri);
+    });
+  }, [item.uri]);
 
   const deleteItem = () => {
     const filteredItems = mediaItems.filter(i => i.id !== item.id);
@@ -53,7 +53,12 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
       case 'image':
         return <Image source={{uri: item.uri}} style={styles.media} resizeMode='contain' />
       default:
-        return <VideoView style={styles.media} player={player} contentFit='contain' nativeControls={false} pointerEvents='none' />
+        return (videoThumbnail ? 
+          <>
+            <Image source={{uri: videoThumbnail}} style={styles.media} resizeMode='contain' />
+            <Text style={{position: 'absolute', color: 'black', backgroundColor: 'white', paddingHorizontal: 2, fontSize: 10}}>Video</Text>
+          </>
+          : <View style={[styles.media, {backgroundColor: 'grey'}]}></View>)
     }
   }
 
@@ -87,7 +92,7 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
 
   return (
     <TouchableOpacity style={[styles.mediaContainer, {height: (screenWidth/2 - 10) * itemHeight/itemWidth}]}
-    onLongPress={() => { setShowElementModal(true) }} onPress={() => { console.log("here"); setFullscreenItem(item) }}>
+    onLongPress={() => { setShowElementModal(true) }} onPress={() => { setFullscreenItem(item) }}>
       {displayMedia()}
       <Modal animationType="fade" transparent={true} visible={showElementModal}
         onRequestClose={() => setShowElementModal(false)}>

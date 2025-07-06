@@ -4,7 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Router, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useState } from 'react';
-import { Button, Image, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Button, Image, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import MediaElement from '../components/element';
 import { backgroundColor, Media } from '../util/constants';
 
@@ -55,22 +55,26 @@ type FullscreenElementProps = {
   router: Router,
 }
 function FullscreenElement({item, setFullscreenItem, router}: FullscreenElementProps) {
-    const player = useVideoPlayer(item.uri, player => {
-      player.loop = true;
-      player.muted = true;
-      player.play();
-    });
+  const {width, height} = useWindowDimensions();
 
-    switch (item.type) {
-      case 'image':
-        return <Image source={{uri: item.uri}} style={styles.media} resizeMode="contain" />
-      case 'website':
-        router.push({pathname: '/webview', params: {uri: item.uri}});
-        setFullscreenItem(null);
-        return <></>
-      default:
-        return <VideoView style={styles.media} player={player} contentFit='contain' nativeControls={false} />
-    }
+  const player = useVideoPlayer(item.uri, player => {
+    player.loop = true;
+    player.play();
+  });
+
+  switch (item.type) {
+    case 'image':
+      return <Image source={{uri: item.uri}} style={styles.media} resizeMode="contain" />
+    case 'website':
+      router.push({pathname: '/webview', params: {uri: item.uri}});
+      setFullscreenItem(null);
+      return <></>
+    default:
+      return <>
+        <VideoView style={[styles.media, {zIndex: 50}]} player={player} contentFit='contain' nativeControls={false} />
+        <View style={{backgroundColor: 'transparent', zIndex: 100, width, height, position: 'absolute'}}></View>
+      </> 
+  }
 };
 
 export default function HomeScreen() {
@@ -115,14 +119,14 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.AndroidSafeArea}>
       <View style={[styles.modalButtonContainer, {justifyContent: 'center'}]}>
         <Button onPress={() => setShowWebsite(true)} color={'purple'} title='Website' />
-        <Button onPress={pickMedia} color={'purple'} title='Image' />
+        <Button onPress={pickMedia} color={'purple'} title='Image/Video' />
       </View>
       <MasonryList data={mediaItems} numColumns={2} keyExtractor={(item) => item.uri} 
         contentContainerStyle={styles.gridContainer} ListFooterComponent={<View style={{height: 40}}></View>}
         renderItem={({item, i}) => <MediaElement index={i} item={item as Media} mediaItems={mediaItems}
           setMediaItems={setMediaItems} setFullscreenItem={setFullscreenItem} saveMediaItems={saveMediaItems} />} 
       />
-      {fullscreenItem && <TouchableOpacity onPress={() => setFullscreenItem(null)} style={styles.fullScreenContainer}>
+      {fullscreenItem && <TouchableOpacity onPress={() => {setFullscreenItem(null)}} style={styles.fullScreenContainer}>
         <FullscreenElement setFullscreenItem={setFullscreenItem} item={fullscreenItem} router={router} />
       </TouchableOpacity>}
       <Modal animationType="fade" transparent={true} visible={showWebsite}
@@ -178,6 +182,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   fullScreenContainer: {
+    // flex: 1,
+    // width: '100%',
+    // height: '100%',
     backgroundColor: 'black',
     justifyContent: 'center',
     alignItems: 'center',
