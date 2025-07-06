@@ -1,4 +1,5 @@
-import { ResizeMode, Video } from 'expo-av';
+// import { ResizeMode, Video } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useState } from 'react';
 import { Button, Image, Modal, StyleSheet, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -21,6 +22,12 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
   
   const itemWidth = item.rotation === 0 ? item.width : item.height;
   const itemHeight = item.rotation === 0 ? item.height : item.width;
+
+  const player = useVideoPlayer(item.uri, player => {
+    player.loop = true;
+    player.muted = true;
+    player.play();
+  });
 
   const deleteItem = () => {
     const filteredItems = mediaItems.filter(i => i.id !== item.id);
@@ -46,8 +53,7 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
       case 'image':
         return <Image source={{uri: item.uri}} style={styles.media} resizeMode='contain' />
       default:
-        return <Video source={{uri: item.uri}} isMuted={true} resizeMode={ResizeMode.CONTAIN}
-          shouldPlay={true} isLooping style={styles.media} useNativeControls={false} />
+        return <VideoView style={styles.media} player={player} contentFit='contain' nativeControls={false} pointerEvents='none' />
     }
   }
 
@@ -81,7 +87,7 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
 
   return (
     <TouchableOpacity style={[styles.mediaContainer, {height: (screenWidth/2 - 10) * itemHeight/itemWidth}]}
-    onLongPress={() => { setShowElementModal(true) }} onPress={() => { setFullscreenItem(item) }}>
+    onLongPress={() => { setShowElementModal(true) }} onPress={() => { console.log("here"); setFullscreenItem(item) }}>
       {displayMedia()}
       <Modal animationType="fade" transparent={true} visible={showElementModal}
         onRequestClose={() => setShowElementModal(false)}>

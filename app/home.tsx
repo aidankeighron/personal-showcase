@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MasonryList from '@react-native-seoul/masonry-list';
-import { ResizeMode, Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { Router, useRouter } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useState } from 'react';
 import { Button, Image, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import MediaElement from '../components/element';
@@ -49,6 +49,30 @@ async function requestPermissions() {
   return true;
 }
 
+type FullscreenElementProps = {
+  item: Media,
+  setFullscreenItem: React.Dispatch<React.SetStateAction<Media | null>>,
+  router: Router,
+}
+function FullscreenElement({item, setFullscreenItem, router}: FullscreenElementProps) {
+    const player = useVideoPlayer(item.uri, player => {
+      player.loop = true;
+      player.muted = true;
+      player.play();
+    });
+
+    switch (item.type) {
+      case 'image':
+        return <Image source={{uri: item.uri}} style={styles.media} resizeMode="contain" />
+      case 'website':
+        router.push({pathname: '/webview', params: {uri: item.uri}});
+        setFullscreenItem(null);
+        return <></>
+      default:
+        return <VideoView style={styles.media} player={player} contentFit='contain' nativeControls={false} />
+    }
+};
+
 export default function HomeScreen() {
   const [mediaItems, setMediaItems] = useState<Media[]>([]);
   const [showWebsite, setShowWebsite] = useState<boolean>(false);
@@ -87,20 +111,6 @@ export default function HomeScreen() {
     }
   };
 
-  const renderFullscreen = (item: Media) => {
-    switch (item.type) {
-      case 'image':
-        return <Image source={{uri: item.uri}} style={styles.media} resizeMode="contain" />
-      case 'website':
-        router.push({pathname: '/webview', params: {uri: item.uri}});
-        setFullscreenItem(null);
-        return <></>
-      default:
-        return <Video source={{uri: item.uri}} isMuted={false} resizeMode={ResizeMode.CONTAIN}
-            shouldPlay={true} isLooping useNativeControls style={styles.media} />
-    }
-  };
-
   return (
     <SafeAreaView style={styles.AndroidSafeArea}>
       <View style={[styles.modalButtonContainer, {justifyContent: 'center'}]}>
@@ -113,7 +123,7 @@ export default function HomeScreen() {
           setMediaItems={setMediaItems} setFullscreenItem={setFullscreenItem} saveMediaItems={saveMediaItems} />} 
       />
       {fullscreenItem && <TouchableOpacity onPress={() => setFullscreenItem(null)} style={styles.fullScreenContainer}>
-        {renderFullscreen(fullscreenItem)}
+        <FullscreenElement setFullscreenItem={setFullscreenItem} item={fullscreenItem} router={router} />
       </TouchableOpacity>}
       <Modal animationType="fade" transparent={true} visible={showWebsite}
         onRequestClose={() => setShowWebsite(false)}>
