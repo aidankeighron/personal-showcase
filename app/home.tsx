@@ -76,9 +76,8 @@ export default function HomeScreen() {
     if (!result.canceled) {
       const selectedAssets: Media[] = result.assets.map(asset => ({
         uri: asset.uri, type: asset.type,
-        // Videos are flipped?
-        width: asset.type === 'video' ? asset.height : asset.width, 
-        height: asset.type === 'video' ? asset.width : asset.height,
+        width: asset.width, height: asset.height,
+        rotation: (asset as any).rotation ?? 0,
         id: asset.assetId || Date.now().toString() + Math.random().toString(),
       }));
       console.log('Selected media assets:', selectedAssets);
@@ -127,6 +126,7 @@ export default function HomeScreen() {
                   uri: website, type: 'website',
                   width: 100, 
                   height: 100,
+                  rotation: 0,
                   id: Date.now().toString() + Math.random().toString(),
                 };
                 console.log('Added website:', newWebsite);
