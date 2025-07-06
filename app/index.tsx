@@ -136,8 +136,12 @@ export default function HomeScreen() {
             <TextInput style={styles.websiteInput} value={website} onChangeText={setWebsite} />
             <View style={styles.modalButtonContainer}>
               <Button title='Add' onPress={() => {
+                let websiteUri = website;
+                if (!websiteUri.includes("http")) {
+                  websiteUri = "https://" + websiteUri;
+                }
                 const newWebsite: Media = {
-                  uri: website, type: 'website',
+                  uri: websiteUri, type: 'website',
                   width: 100, 
                   height: 100,
                   rotation: 0,
@@ -182,10 +186,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   fullScreenContainer: {
-    // flex: 1,
-    // width: '100%',
-    // height: '100%',
-    backgroundColor: 'black',
+    backgroundColor: backgroundColor,
     justifyContent: 'center',
     alignItems: 'center',
   },
