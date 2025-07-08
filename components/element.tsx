@@ -1,6 +1,6 @@
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import { useEffect, useState } from 'react';
-import { Button, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Button, Image, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Media } from '../util/constants';
 
@@ -91,7 +91,7 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
   };
 
   return (
-    <TouchableOpacity style={[styles.mediaContainer, {height: (screenWidth/2 - 10) * itemHeight/itemWidth}]}
+    <Pressable style={[styles.mediaContainer, {height: (screenWidth/2 - 10) * itemHeight/itemWidth}]}
     onLongPress={() => { setShowElementModal(true) }} onPress={() => { setFullscreenItem(item) }}>
       {displayMedia()}
       <Modal animationType="fade" transparent={true} visible={showElementModal}
@@ -113,7 +113,7 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
           </View>
         </View>
       </Modal>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 

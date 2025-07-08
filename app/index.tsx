@@ -4,7 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Router, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useState } from 'react';
-import { Button, Image, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Button, Image, Modal, Platform, Pressable, SafeAreaView, StatusBar, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import MediaElement from '../components/element';
 import { backgroundColor, Media } from '../util/constants';
 
@@ -126,9 +126,9 @@ export default function HomeScreen() {
         renderItem={({item, i}) => <MediaElement index={i} item={item as Media} mediaItems={mediaItems}
           setMediaItems={setMediaItems} setFullscreenItem={setFullscreenItem} saveMediaItems={saveMediaItems} />} 
       />
-      {fullscreenItem && <TouchableOpacity onPress={() => {setFullscreenItem(null)}} style={styles.fullScreenContainer}>
+      {fullscreenItem && <Pressable onPress={() => {setFullscreenItem(null)}} style={styles.fullScreenContainer}>
         <FullscreenElement setFullscreenItem={setFullscreenItem} item={fullscreenItem} router={router} />
-      </TouchableOpacity>}
+      </Pressable>}
       <Modal animationType="fade" transparent={true} visible={showWebsite}
         onRequestClose={() => setShowWebsite(false)}>
         <View style={styles.centeredView}>
