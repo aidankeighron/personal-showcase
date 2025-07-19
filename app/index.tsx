@@ -4,7 +4,13 @@ import * as ImagePicker from 'expo-image-picker';
 import { Router, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useState } from 'react';
-import { Button, Image, Modal, Platform, Pressable, SafeAreaView, StatusBar, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import {
+  Button, Image, Modal, Platform,
+  Pressable,
+  SafeAreaView, StatusBar, StyleSheet,
+  Text, TextInput,
+  useWindowDimensions, View
+} from 'react-native';
 import MediaElement from '../components/element';
 import { backgroundColor, Media } from '../util/constants';
 
@@ -56,7 +62,8 @@ type FullscreenElementProps = {
 }
 function FullscreenElement({item, setFullscreenItem, router}: FullscreenElementProps) {
   const {width, height} = useWindowDimensions();
-
+  const [rotate, setRotate] = useState<boolean>(false);
+  
   const player = useVideoPlayer(item.uri, player => {
     player.loop = true;
     player.play();
@@ -64,14 +71,20 @@ function FullscreenElement({item, setFullscreenItem, router}: FullscreenElementP
 
   switch (item.type) {
     case 'image':
-      return <Image source={{uri: item.uri}} style={styles.media} resizeMode="contain" />
+      return <>
+        <Image source={{uri: item.uri}} style={[styles.media, rotate && {transform: [{ rotate: '90deg' }]}]} resizeMode="contain" />
+        <Text style={styles.fullscreenRotate} onPress={() => {setRotate(!rotate)}}>&#8635;</Text>
+      </>
     case 'website':
       router.push({pathname: '/webview', params: {uri: item.uri}});
       setFullscreenItem(null);
       return <></>
     default:
       return <>
-        <VideoView style={[styles.media, {zIndex: 50}]} player={player} contentFit='contain' nativeControls={false} />
+        <View style={[styles.media, rotate && {transform: [{ rotate: '90deg' }]}]}>
+          <VideoView style={[styles.media, {zIndex: 50}]} player={player} contentFit='contain' nativeControls={false} />
+        </View>
+        <Text style={styles.fullscreenRotate} onPress={() => {setRotate(!rotate)}}>&#8635;</Text>
         <View style={{backgroundColor: 'transparent', zIndex: 100, width, height, position: 'absolute'}}></View>
       </> 
   }
@@ -189,6 +202,20 @@ const styles = StyleSheet.create({
     backgroundColor: backgroundColor,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  fullscreenRotate: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    paddingBottom: 10,
+    height: 50,
+    width: 50,
+    borderRadius: 15,
+    backgroundColor: 'grey',
+    fontSize: 30,
+    zIndex: 150,
+    textAlign: 'center',
+    textAlignVertical: 'center',
   },
   modalButtonContainer: {
     flexDirection: 'row',
