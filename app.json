@@ -2,8 +2,8 @@
   "expo": {
     "name": "Personal Showcase",
     "slug": "personal-showcase",
-    "version": "1.0.1",
-    "orientation": "portrait",
+    "version": "1.0.2",
+    "orientation": "default",
     "icon": "./assets/images/favicon.png",
     "scheme": "personalshowcase",
     "userInterfaceStyle": "automatic",

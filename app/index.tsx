@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import MasonryList from '@react-native-seoul/masonry-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Router, useRouter } from 'expo-router';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useState } from 'react';
 import {
@@ -64,6 +65,15 @@ function FullscreenElement({item, setFullscreenItem, router}: FullscreenElementP
   const {width, height} = useWindowDimensions();
   const [rotate, setRotate] = useState<boolean>(false);
   
+  useEffect(() => {
+    if (rotate) {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+    }
+    else {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+    }
+  }, [rotate])
+
   const player = useVideoPlayer(item.uri, player => {
     player.loop = true;
     player.play();
@@ -72,7 +82,7 @@ function FullscreenElement({item, setFullscreenItem, router}: FullscreenElementP
   switch (item.type) {
     case 'image':
       return <>
-        <Image source={{uri: item.uri}} style={[styles.media, rotate && {transform: [{ rotate: '90deg' }]}]} resizeMode="contain" />
+        <Image source={{uri: item.uri}} style={[styles.media]} resizeMode="contain" />
         <Text style={styles.fullscreenRotate} onPress={() => {setRotate(!rotate)}}>&#8635;</Text>
       </>
     case 'website':
@@ -81,7 +91,7 @@ function FullscreenElement({item, setFullscreenItem, router}: FullscreenElementP
       return <></>
     default:
       return <>
-        <View style={[styles.media, rotate && {transform: [{ rotate: '90deg' }]}]}>
+        <View style={[styles.media]}>
           <VideoView style={[styles.media, {zIndex: 50}]} player={player} contentFit='contain' nativeControls={false} />
         </View>
         <Text style={styles.fullscreenRotate} onPress={() => {setRotate(!rotate)}}>&#8635;</Text>

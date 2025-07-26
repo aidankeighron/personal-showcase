@@ -1,7 +1,7 @@
 {
   "name": "personal-showcase",
   "main": "expo-router/entry",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -41,7 +41,8 @@
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-web": "~0.20.0",
-    "react-native-webview": "^13.13.5"
+    "react-native-webview": "^13.13.5",
+    "expo-screen-orientation": "~8.1.7"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
