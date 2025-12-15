@@ -74,6 +74,12 @@ function FullscreenElement({item, setFullscreenItem, router}: FullscreenElementP
     }
   }, [rotate])
 
+  useEffect(() => {
+    return () => {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+    }
+  }, [])
+
   const player = useVideoPlayer(item.uri, player => {
     player.loop = true;
     player.play();
