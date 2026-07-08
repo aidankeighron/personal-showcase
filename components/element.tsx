@@ -1,4 +1,5 @@
 import * as VideoThumbnails from 'expo-video-thumbnails';
+import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Image, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -22,6 +23,7 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
   const {width: screenWidth} = useWindowDimensions();
   const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
   const scale = useRef(new Animated.Value(1)).current;
+  const router = useRouter();
 
   const itemWidth = item.rotation === 0 ? item.width : item.height;
   const itemHeight = item.rotation === 0 ? item.height : item.width;
@@ -97,7 +99,13 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
     <Pressable
       style={[styles.mediaContainer, {height: (screenWidth/2 - 10) * itemHeight/itemWidth}]}
       onLongPress={() => { setShowElementModal(true) }}
-      onPress={() => { setFullscreenItem(item) }}
+      onPress={() => {
+        if (item.type === 'website') {
+          router.push({ pathname: '/webview', params: { uri: item.uri } });
+        } else {
+          setFullscreenItem(item);
+        }
+      }}
       onPressIn={() => Animated.timing(scale, { toValue: 0.95, duration: 125, useNativeDriver: true }).start()}
       onPressOut={() => Animated.timing(scale, { toValue: 1, duration: 125, useNativeDriver: true }).start()}>
       <Animated.View style={{flex: 1, transform: [{scale}]}}>

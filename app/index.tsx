@@ -1,12 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MasonryList from '@react-native-seoul/masonry-list';
 import * as ImagePicker from 'expo-image-picker';
-import { Router, useRouter } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Animated, Image, Modal, Platform,
+  Image, Modal, Platform,
   Pressable,
   SafeAreaView, StatusBar, StyleSheet,
   Text, TextInput,
@@ -58,10 +57,8 @@ async function requestPermissions() {
 
 type FullscreenElementProps = {
   item: Media,
-  setFullscreenItem: React.Dispatch<React.SetStateAction<Media | null>>,
-  router: Router,
 }
-function FullscreenElement({item, setFullscreenItem, router}: FullscreenElementProps) {
+function FullscreenElement({item}: FullscreenElementProps) {
   const {width, height} = useWindowDimensions();
   const [rotate, setRotate] = useState<boolean>(false);
 
@@ -88,16 +85,12 @@ function FullscreenElement({item, setFullscreenItem, router}: FullscreenElementP
   switch (item.type) {
     case 'image':
       return <>
-        <Image source={{uri: item.uri}} style={[styles.media]} resizeMode="contain" />
+        <Image source={{uri: item.uri}} style={styles.media} resizeMode="contain" />
         <Text style={styles.fullscreenRotate} onPress={() => {setRotate(!rotate)}}>&#8635;</Text>
       </>
-    case 'website':
-      router.push({pathname: '/webview', params: {uri: item.uri}});
-      setFullscreenItem(null);
-      return <></>
     default:
       return <>
-        <View style={[styles.media]}>
+        <View style={styles.media}>
           <VideoView style={[styles.media, {zIndex: tokens.zTray}]} player={player} contentFit='contain' nativeControls={false} />
         </View>
         <Text style={styles.fullscreenRotate} onPress={() => {setRotate(!rotate)}}>&#8635;</Text>
@@ -111,8 +104,6 @@ export default function HomeScreen() {
   const [showWebsite, setShowWebsite] = useState<boolean>(false);
   const [website, setWebsite] = useState<string>("");
   const [fullscreenItem, setFullscreenItem] = useState<Media | null>(null);
-  const router = useRouter();
-  const fullscreenScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const fetchStoredMedia = async () => {
@@ -156,15 +147,11 @@ export default function HomeScreen() {
         renderItem={({item, i}) => <MediaElement index={i} item={item as Media} mediaItems={mediaItems}
           setMediaItems={setMediaItems} setFullscreenItem={setFullscreenItem} saveMediaItems={saveMediaItems} />}
       />
-      {fullscreenItem && <Pressable
-        onPress={() => {setFullscreenItem(null)}}
-        onPressIn={() => Animated.timing(fullscreenScale, { toValue: 0.95, duration: 125, useNativeDriver: true }).start()}
-        onPressOut={() => Animated.timing(fullscreenScale, { toValue: 1, duration: 125, useNativeDriver: true }).start()}
-        style={styles.fullScreenContainer}>
-        <Animated.View style={{flex: 1, width: '100%', transform: [{scale: fullscreenScale}]}}>
-          <FullscreenElement setFullscreenItem={setFullscreenItem} item={fullscreenItem} router={router} />
-        </Animated.View>
-      </Pressable>}
+      {fullscreenItem && (
+        <Pressable onPress={() => setFullscreenItem(null)} style={styles.fullScreenContainer}>
+          <FullscreenElement item={fullscreenItem} />
+        </Pressable>
+      )}
       <Modal animationType="fade" transparent={true} visible={showWebsite}
         onRequestClose={() => setShowWebsite(false)}>
         <View style={styles.centeredView}>
@@ -219,12 +206,13 @@ const styles = StyleSheet.create({
   media: {
     width: '100%',
     height: '100%',
-    borderRadius: tokens.radiusSm,
   },
   fullScreenContainer: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: tokens.background,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: tokens.zModal,
   },
   fullscreenRotate: {
     position: 'absolute',
