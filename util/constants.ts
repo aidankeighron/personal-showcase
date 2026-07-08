@@ -1,5 +1,3 @@
-export const backgroundColor = '#1E1F22';
-
 export type Media = {
   id: string,
   uri: string,

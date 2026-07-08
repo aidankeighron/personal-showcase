@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView, StyleSheet } from "react-native";
 import WebView from "react-native-webview";
+import { tokens } from "../util/tokens";
 
 export default function WebViewScreen() {
     const {uri} = useLocalSearchParams();
@@ -13,6 +14,7 @@ export default function WebViewScreen() {
 const styles = StyleSheet.create({
     AndroidSafeArea: {
         flex: 1,
+        backgroundColor: tokens.background,
     },
     media: {
         width: '100%',

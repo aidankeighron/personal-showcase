@@ -1,0 +1,204 @@
+/*
+ * Half Full Design System — Token Stylesheet
+ *
+ * Drop this file into any project and import it as the first stylesheet.
+ * All design decisions in this system reference these variables — never
+ * use hardcoded color, spacing, font, or radius values outside of this file.
+ *
+ * Usage:
+ *   <link rel="stylesheet" href="tokens.css">
+ *   or
+ *   @import url('./tokens.css');
+ */
+
+/* ─── Google Fonts (monospace stack) ──────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap');
+
+/* ─── Dark theme (default) ────────────────────────────────────────────────── */
+:root {
+  /* Color tokens */
+  --foreground:              hsl(0, 0%, 100%);       /* Primary text, borders, icons */
+  --background:              hsl(0, 0%, 15%);        /* Page/app background */
+  --alt-background:          hsl(280, 50%, 30%);     /* Secondary panels, notification bg */
+  --alt-foreground:          hsl(280, 75%, 75%);     /* Secondary text, separator lines */
+  --accent:                  hsl(280, 75%, 50%);     /* Interactive elements, focus, highlights */
+  --alt-accent:              hsl(280, 75%, 90%);     /* Hover states on accent elements */
+  --alt-background-neutral:  hsl(0, 0%, 30%);        /* Input/button backgrounds (neutral) */
+  --alt-foreground-neutral:  hsl(0, 0%, 75%);        /* Placeholder text, disabled text */
+
+  /* Typography */
+  --font-family:                  "Courier New", "JetBrains Mono", "Roboto Mono", "Source Code Pro", monospace;
+  --task-title-font-size:         16px;
+  --task-title-font-weight:       600;
+  --task-title-line-height:       1;
+  --task-title-letter-spacing:    0px;
+  --general-line-height:          1.2;
+  --general-letter-spacing:       0px;
+
+  /* Font size scale */
+  --font-size-xs:    12px;   /* badges, start-trial labels */
+  --font-size-sm:    14px;   /* filter items */
+  --font-size-base:  16px;   /* body text, buttons, inputs */
+  --font-size-md:    18px;   /* day headers, labels, notifications */
+  --font-size-lg:    20px;   /* modal titles */
+  --font-size-xl:    24px;   /* modal subtitle p */
+  --font-size-2xl:   25px;   /* nav/header buttons, month bar */
+  --font-size-3xl:   38px;   /* modal close × */
+  --font-size-4xl:   50px;   /* app title */
+  --font-size-hero:  80px;   /* splash screen */
+
+  /* Spacing scale (4pt-base grid) */
+  --space-1:   2px;
+  --space-2:   4px;
+  --space-3:   5px;
+  --space-4:   6px;
+  --space-5:   8px;
+  --space-6:   10px;
+  --space-7:   12px;
+  --space-8:   15px;
+  --space-9:   16px;
+  --space-10:  20px;
+  --space-11:  24px;  /* modal padding */
+  --space-12:  32px;
+  --space-13:  40px;
+
+  /* Border radius */
+  --radius-sm:   6px;    /* inputs, tasks, checkboxes */
+  --radius-md:   8px;    /* buttons, start-trial */
+  --radius-lg:   10px;   /* modals, cards, notifications, tooltips */
+  --radius-pill: 100px;  /* header/label tasks */
+  --radius-full: 50%;    /* circular elements */
+
+  /* Borders */
+  --border-default:  1px solid var(--foreground);
+  --border-accent:   2px solid var(--accent);
+  --border-modal:    2px solid var(--foreground);
+  --border-width-sm: 1px;
+  --border-width-md: 2px;
+
+  /* Shadows — only used on floating/elevated elements */
+  --shadow-float:    0 4px 10px rgba(0, 0, 0, 0.2);
+  --shadow-picker:   0 1.25em 1.25em -0.9375em rgba(0, 0, 0, 0.3);
+  --backdrop-blur:   blur(2px);
+  --backdrop-heavy:  blur(5px);
+
+  /* Modal component tokens */
+  --modal-border-radius: var(--radius-lg);
+  --modal-padding:       var(--space-11);
+  --modal-border-width:  var(--border-width-md);
+
+  /* Checkbox */
+  --checkbox-size: 16px;
+
+  /* Z-index scale */
+  --z-base:         1;
+  --z-particles:    5;
+  --z-sticky:       10;
+  --z-tray:         50;
+  --z-modal:        100;
+  --z-tooltip-desc: 200;
+  --z-notification: 300;
+  --z-upsell:       500;
+
+  /* Transitions */
+  --transition-fast:   0.15s ease;
+  --transition-base:   0.25s ease;
+  --transition-slow:   0.3s ease-in-out;
+  --transition-border: border 0.25s;
+}
+
+/* ─── Light theme override ────────────────────────────────────────────────── */
+@media (prefers-color-scheme: light) {
+  :root {
+    --foreground:              hsl(0, 0%, 0%);
+    --background:              hsl(0, 0%, 95%);
+    --alt-background:          hsl(280, 35%, 75%);
+    --alt-foreground:          hsl(280, 100%, 30%);
+    --accent:                  hsl(280, 100%, 35%);
+    --alt-accent:              hsl(280, 100%, 75%);
+    --alt-background-neutral:  hsl(0, 0%, 75%);
+    --alt-foreground-neutral:  hsl(0, 0%, 30%);
+  }
+}
+
+/* ─── Animations ──────────────────────────────────────────────────────────── */
+
+/* Subtle press-in on hover — apply to ALL interactive elements */
+@keyframes pulsate {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+/* Deeper press on click/active */
+@keyframes click-press {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* Modal entrance */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Element fade-out (task complete, dismiss) */
+@keyframes hide {
+  0%   { display: block; opacity: 1; }
+  50%  { opacity: 0; max-height: 70px; padding-top: 5px; }
+  100% { opacity: 0; display: none; max-height: 0; padding-top: 0; }
+}
+
+/* Element fade-in */
+@keyframes show {
+  0%   { display: block; opacity: 0; max-height: 0; padding-top: 0; }
+  50%  { opacity: 0; max-height: 70px; padding-top: 5px; }
+  100% { opacity: 1; }
+}
+
+/* Progress bar drain */
+@keyframes progressDrain {
+  from { width: 100%; }
+  to   { width: 0; }
+}
+
+/* ─── Theme system ────────────────────────────────────────────────────────── */
+/*
+ * The 8 color tokens above represent the DEFAULT theme state (accent + violet).
+ * In production, override them at runtime via applyTheme(themeType, hue) from DESIGN.md § 12.5.
+ *
+ * Theme types:
+ *   accent      — greyscale dark bg + colored accent  (default)
+ *   complement  — hue-tinted dark bg + colored accent
+ *   two-tone    — analogous shifted colors (bg is near-black, panels + accent offset by ±30°)
+ *   light       — greyscale light bg + deep colored accent
+ *
+ * Hue options → degree:
+ *   red=5  orange=39  yellow=60  green=130  blue=180  indigo=250  violet=280
+ *
+ * Call applyTheme() on app init and whenever themeType or hue changes.
+ * Store the user's selection in persistent settings (e.g. electron-store or localStorage).
+ *
+ * Note: --alt-foreground-neutral on --alt-background-neutral is borderline (4.1:1).
+ *       Use font-size ≥ 18px or font-weight ≥ 600 for that pairing.
+ *       Never use --background as text color on --accent (fails WCAG AA at ~2.6:1 in dark mode).
+ */
+
+/* ─── Global resets ───────────────────────────────────────────────────────── */
+* {
+  font-family: var(--font-family);
+  color: var(--foreground);
+  line-height: var(--general-line-height);
+  letter-spacing: var(--general-letter-spacing);
+  box-sizing: border-box;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+}
+
+/* Hide focus ring when focused programmatically (not keyboard) */
+[data-programmatic-focus]:focus {
+  outline: none;
+}

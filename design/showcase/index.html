@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Half Full — Design System Showcase</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../tokens.css">
+
+  <style>
+    /* ── Page chrome ─────────────────────────────────────────────────────── */
+    html { background: var(--background); }
+    body { margin: 0; padding: 40px; overflow-y: scroll; background: var(--background); }
+
+    .page-title    { font-size: 50px; font-weight: normal; margin: 0 0 8px 0; }
+    .page-subtitle { font-size: 18px; color: var(--alt-foreground-neutral); margin: 0 0 40px 0; }
+    .separator     { width: 100%; height: 2px; background-color: var(--alt-foreground); border: none; margin: 40px 0; }
+
+    .section       { margin-bottom: 48px; }
+    .section-title { font-size: 20px; font-weight: 600; margin: 0 0 4px 0; }
+    .section-desc  { font-size: 14px; color: var(--alt-foreground-neutral); margin: 0 0 20px 0; }
+
+    .demo-row { display: flex; flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: 16px; }
+    .demo-col { display: flex; flex-direction: column; gap: 12px; }
+    .demo-label { font-size: 12px; color: var(--alt-foreground-neutral); margin: 0 0 4px 0; }
+
+    /* ── Theme switcher bar (pinned at top) ─────────────────────────────── */
+    .theme-bar {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: var(--alt-background-neutral);
+      border-bottom: 1px solid var(--foreground);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: -40px -40px 40px -40px;
+    }
+    .theme-bar label { font-size: 14px; color: var(--alt-foreground-neutral); }
+    .theme-bar select {
+      background: var(--alt-background);
+      color: var(--foreground);
+      border: 1px solid var(--foreground);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 14px;
+      font-family: var(--font-family);
+      cursor: pointer;
+    }
+    .theme-bar span { font-size: 12px; color: var(--alt-foreground-neutral); }
+
+    /* ── 1. Color swatches ───────────────────────────────────────────────── */
+    .palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .swatch { border-radius: 10px; border: 1px solid var(--foreground); overflow: hidden; }
+    .swatch-color { height: 64px; width: 100%; }
+    .swatch-info { padding: 8px 12px; background-color: var(--alt-background-neutral); }
+    .swatch-name  { font-size: 14px; font-weight: 600; margin: 0 0 2px 0; color: var(--foreground); }
+    .swatch-value { font-size: 12px; color: var(--alt-foreground-neutral); margin: 0; font-weight: 600; }
+
+    /* ── 2. Typography ───────────────────────────────────────────────────── */
+    .type-row { display: flex; align-items: baseline; gap: 24px; padding: 8px 0; border-bottom: 1px solid var(--alt-background); }
+    .type-row:last-child { border-bottom: none; }
+    .type-meta { font-size: 12px; color: var(--alt-foreground-neutral); min-width: 140px; }
+
+    /* ── 3. Buttons ──────────────────────────────────────────────────────── */
+    /* Primary — solid accent, FOREGROUND text (not background — contrast fix) */
+    .btn-primary {
+      display: inline-flex;
+      flex-direction: column;
+      justify-content: center;
+      background-color: var(--accent);
+      border-radius: 8px;
+      cursor: pointer;
+      border: 0;
+      padding: 8px 16px;
+    }
+    .btn-primary span {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--foreground);       /* CORRECT: foreground on accent for contrast */
+      font-family: var(--font-family);
+    }
+    .btn-primary:hover  { animation: pulsate 0.25s ease both; }
+    .btn-primary:active { animation: click-press 0.25s ease both; }
+
+    /* Secondary */
+    .btn-secondary {
+      background-color: var(--alt-background-neutral);
+      border-radius: 8px;
+      font-size: 16px; font-weight: 400;
+      font-family: var(--font-family);
+      color: var(--foreground);
+      border: 2px solid transparent;
+      padding: 6px 16px;
+      cursor: pointer;
+      outline-color: var(--accent);
+      line-height: var(--general-line-height);
+    }
+    .btn-secondary:hover  { animation: pulsate 0.25s ease both; transition: border 0.25s; }
+    .btn-secondary:active { animation: click-press 0.25s ease both; }
+
+    /* Tertiary */
+    .btn-tertiary {
+      background: none; border: none;
+      font-size: 25px; font-family: var(--font-family);
+      color: var(--foreground);
+      cursor: pointer; padding: 0;
+      line-height: var(--general-line-height);
+    }
+    .btn-tertiary:hover  { font-weight: bold; animation: pulsate 0.25s ease both; }
+    .btn-tertiary:active { animation: click-press 0.25s ease both; }
+
+    /* ── 4. Inputs ───────────────────────────────────────────────────────── */
+    .text-input {
+      background-color: var(--alt-background-neutral);
+      color: var(--foreground);
+      border: 0; padding: 6px 12px;
+      border-radius: 6px; font-size: 16px;
+      font-family: var(--font-family);
+      line-height: var(--general-line-height);
+    }
+    .text-input::placeholder { color: var(--alt-foreground-neutral); }
+
+    .label-container { display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 5px; }
+    .label-container p {
+      color: var(--alt-foreground-neutral);
+      font-size: 18px; font-weight: 400; margin: 0;
+      font-family: var(--font-family);
+      line-height: var(--general-line-height);
+    }
+
+    /* ── 5. Dropdown ─────────────────────────────────────────────────────── */
+    .dropdown {
+      background: var(--alt-background-neutral);
+      padding: 6px 12px; color: var(--foreground);
+      font-size: 16px; border-radius: 6px; border-width: 0;
+      font-family: var(--font-family); cursor: pointer;
+      line-height: var(--general-line-height);
+    }
+    .dropdown:hover { animation: pulsate 0.25s ease both; }
+
+    /* ── 6a. Task checkboxes (solid block, no text) ──────────────────────── */
+    .task-chk-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;  /* vertical centering */
+      gap: 8px;
+      cursor: pointer;
+    }
+    .task-chk-row span {
+      font-size: 16px;
+      line-height: 16px; /* match checkbox height to eliminate baseline shift */
+    }
+    .task-chk-box {
+      width: 16px; height: 16px;
+      min-width: 16px; max-width: 16px;
+      min-height: 16px; max-height: 16px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .task-chk-unchecked { background-color: var(--foreground); }
+    .task-chk-hovered   { background-color: var(--alt-accent); }
+    .task-chk-checked   { background-color: var(--accent); }
+    .task-chk-row:hover .task-chk-box { animation: pulsate 0.15s ease both; }
+
+    /* ── 6b. Settings checkboxes (button-style, text inside) ─────────────── */
+    .settings-chk {
+      display: inline-flex;
+      border-radius: 6px;
+      padding: 4px 8px;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      font-family: var(--font-family);
+      min-width: 12px; min-height: 12px;
+    }
+    .settings-chk-off {
+      background-color: var(--alt-background);
+      color: var(--foreground);
+    }
+    .settings-chk-on {
+      background-color: var(--alt-foreground);
+      color: var(--background);
+    }
+    .settings-chk:hover  { animation: pulsate 0.15s ease both; }
+    .settings-chk:active { animation: click-press 0.15s ease both; }
+
+    /* ── 7. Radio buttons (segmented control / button row) ───────────────── */
+    .radio-buttons { display: flex; flex-direction: row; gap: 10px; }
+    .radio-btn {
+      display: inline-flex;
+      border-radius: 6px;
+      padding: 4px 10px;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      font-family: var(--font-family);
+    }
+    .radio-btn-off { background-color: var(--alt-background); color: var(--foreground); }
+    .radio-btn-on  { background-color: var(--alt-foreground); color: var(--background); }
+    .radio-btn:hover  { animation: pulsate 0.15s ease both; }
+    .radio-btn:active { animation: click-press 0.15s ease both; }
+
+    /* ── 8. Modal (inline) ───────────────────────────────────────────────── */
+    .modal-inline {
+      background-color: var(--background);
+      padding: 24px; border: 2px solid var(--foreground);
+      border-radius: 10px; width: fit-content; max-width: 480px;
+      animation: slideIn 0.3s ease-out;
+    }
+    .modal-title-row {
+      display: flex; flex-direction: row;
+      justify-content: space-between; align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .modal-title-text { font-size: 20px; font-weight: 600; margin: 0; }
+    .modal-close-btn  {
+      font-size: 38px; font-weight: 600; line-height: 1;
+      cursor: pointer; margin-left: auto;
+      font-family: var(--font-family);
+    }
+    .modal-close-btn:hover  { animation: pulsate 0.25s ease both; }
+    .modal-close-btn:active { animation: click-press 0.25s ease both; }
+    .modal-body-content { font-size: 16px; color: var(--alt-foreground-neutral); margin: 0 0 20px 0; }
+    .modal-actions { display: flex; gap: 10px; }
+
+    /* ── 9. Settings panel ───────────────────────────────────────────────── */
+    .settings-panel {
+      background-color: var(--background);
+      border: 2px solid var(--foreground);
+      border-radius: 10px; padding: 24px;
+      width: 480px; display: flex; flex-direction: column;
+    }
+    .settings-tab-buttons  { display: flex; justify-content: space-around; margin-bottom: 16px; }
+    .settings-tab-btn {
+      border-radius: 5px; font-size: 18px; font-weight: 600;
+      font-family: var(--font-family); padding: 5px; width: 115px;
+      text-align: center; background: transparent;
+      color: var(--alt-foreground); opacity: 0.8; cursor: pointer; border: none;
+    }
+    .settings-tab-btn.active-tab { background-color: var(--alt-background-neutral); color: var(--foreground); opacity: 1; }
+    .settings-tab-btn:hover  { animation: pulsate 0.25s ease both; }
+    .settings-tab-divider    { width: 100%; height: 1px; background: var(--alt-background); margin-bottom: 8px; }
+    .settings-option         { margin: 20px; display: flex; flex-direction: row; align-items: center; white-space: nowrap; gap: 10px; }
+    .settings-option p       { padding: 0; margin: 0; font-size: 16px; font-family: var(--font-family); }
+    .settings-input {
+      font-size: 18px; font-family: var(--font-family);
+      background-color: var(--alt-background-neutral);
+      border: 0; border-radius: 5px; padding: 5px;
+      width: 50px; outline-color: var(--accent); color: var(--foreground);
+    }
+    .settings-version {
+      font-size: 12px; color: var(--alt-foreground-neutral);
+      text-align: center; margin-top: auto; padding-top: 20px;
+    }
+
+    /* ── 10. Context menu ────────────────────────────────────────────────── */
+    .ctx-menu { display: inline-flex; flex-direction: column; padding: 2px 5px; border-radius: 10px; background-color: var(--background); border: 1px solid var(--foreground); min-width: 140px; }
+    .ctx-menu-item { padding: 5px 10px; font-size: 16px; font-family: var(--font-family); border-bottom: 1px solid var(--alt-background); cursor: pointer; line-height: var(--general-line-height); }
+    .ctx-menu-item:last-child { border-bottom: none; }
+    .ctx-menu-item:hover  { font-weight: bold; }
+    .ctx-menu-item:active { animation: click-press 0.25s ease both; }
+
+    /* ── 11. Notification ────────────────────────────────────────────────── */
+    .notification-demo { display: inline-flex; background-color: var(--alt-background); padding: 8px 16px; border-radius: 10px; max-width: 400px; }
+    .notification-demo p { font-size: 18px; margin: 5px; font-family: var(--font-family); }
+
+    /* ── 12. Tooltip ─────────────────────────────────────────────────────── */
+    .tooltip-demo {
+      position: relative; display: inline-block;
+      border-radius: 25px; width: 25px; height: 25px;
+      border: 1px solid var(--foreground);
+      text-align: center; line-height: 25px; font-size: 14px;
+      cursor: default; font-family: var(--font-family);
+    }
+    .tooltip-demo::after {
+      content: attr(data-tip);
+      background-color: var(--alt-background-neutral); border-radius: 10px;
+      position: absolute; padding: 5px 10px; font-size: 16px;
+      top: 0; left: 32px; width: max-content;
+      opacity: 0; display: none;
+      transition: opacity 0.3s ease-in-out; z-index: 100;
+      font-family: var(--font-family);
+    }
+    .tooltip-demo:hover::after { opacity: 1; display: block; }
+
+    /* ── 13. Task cards ──────────────────────────────────────────────────── */
+    .task-card {
+      border-radius: 6px; background-color: var(--background);
+      border: 1px solid var(--foreground);
+      display: flex; flex-direction: row;
+      align-items: flex-start; padding: 6px;
+      cursor: grabbing; width: 200px; gap: 6px;
+    }
+    .task-card:hover { border-color: var(--accent); animation: pulsate 0.25s ease both; transition: border 0.25s; }
+    .task-chk-inner { width: 16px; height: 16px; min-width: 16px; max-width: 16px; min-height: 16px; max-height: 16px; border-radius: 6px; flex-shrink: 0; margin-top: 1px; }
+    .tc-unchecked { background-color: var(--foreground); }
+    .tc-checked   { background-color: var(--accent); }
+    .tc-unchecked:hover { background-color: var(--alt-accent); animation: pulsate 0.15s ease both; }
+    .task-title { font-size: 16px; font-weight: 600; font-family: var(--font-family); line-height: 1; margin: 0; flex: 1; }
+    .task-card-checked { opacity: 0.5; }
+    .task-card-checked .task-title { text-decoration: line-through; }
+
+    /* ── 14. Pattern pills ───────────────────────────────────────────────── */
+    .pattern-pill { display: inline-block; background-color: var(--background); border: 1px solid var(--foreground); border-radius: 6px; padding: 5px 10px; font-size: 16px; font-weight: 600; font-family: var(--font-family); cursor: pointer; }
+    .pattern-pill:hover { border-color: var(--accent); animation: pulsate 0.25s ease both; transition: border 0.25s; }
+
+    /* ── 15. Progress bar ────────────────────────────────────────────────── */
+    .progress-container { width: 300px; height: 6px; background-color: var(--alt-background-neutral); border-radius: 3px; overflow: hidden; }
+    .progress-bar { height: 100%; background-color: var(--accent); border-radius: 3px; }
+
+    /* ── 17. Color contrast table ────────────────────────────────────────── */
+    .contrast-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .contrast-table th, .contrast-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--alt-background); font-family: var(--font-family); }
+    .contrast-table th { font-weight: 600; color: var(--alt-foreground); font-size: 12px; }
+    .contrast-table td { color: var(--foreground); }
+    .pass   { color: hsl(130, 75%, 60%); font-weight: 600; }
+    .warn   { color: hsl(60, 100%, 60%); font-weight: 600; }
+    .fail   { color: hsl(5, 90%, 60%); font-weight: 600; }
+    .swatch-inline { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 4px; border: 1px solid rgba(255,255,255,0.2); }
+  </style>
+</head>
+<body>
+
+  <!-- ── Sticky theme bar ───────────────────────────────────────────────── -->
+  <div class="theme-bar">
+    <span>Theme:</span>
+    <label>Type
+      <select id="themeType" onchange="applyThemeFromUI()">
+        <option value="accent" selected>accent</option>
+        <option value="complement">complement</option>
+        <option value="two-tone">two-tone</option>
+        <option value="light">light</option>
+      </select>
+    </label>
+    <label>Hue
+      <select id="themeHue" onchange="applyThemeFromUI()">
+        <option value="red">red</option>
+        <option value="orange">orange</option>
+        <option value="yellow">yellow</option>
+        <option value="green">green</option>
+        <option value="blue">blue</option>
+        <option value="indigo">indigo</option>
+        <option value="violet" selected>violet</option>
+      </select>
+    </label>
+    <span>← live preview — every component below updates instantly</span>
+  </div>
+
+  <h1 class="page-title">Half Full</h1>
+  <p class="page-subtitle">Design System Showcase — visual reference for all components. Use the theme bar above to preview any theme combination.</p>
+
+  <hr class="separator">
+
+  <!-- ── 1. Color Palette ──────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">1. Color Palette</h2>
+    <p class="section-desc">The 8 semantic CSS variables. All driven by the themeType + hue combination above.</p>
+    <div class="palette-grid">
+      <div class="swatch"><div class="swatch-color" style="background:var(--foreground);"></div><div class="swatch-info"><p class="swatch-name">--foreground</p><p class="swatch-value">Primary text, borders, icons</p></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--background); border-bottom:1px solid var(--foreground);"></div><div class="swatch-info"><p class="swatch-name">--background</p><p class="swatch-value">App background</p></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--alt-background);"></div><div class="swatch-info"><p class="swatch-name">--alt-background</p><p class="swatch-value">Secondary panels, notifications</p></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--alt-foreground);"></div><div class="swatch-info"><p class="swatch-name">--alt-foreground</p><p class="swatch-value">Secondary text, separators</p></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--accent);"></div><div class="swatch-info"><p class="swatch-name">--accent</p><p class="swatch-value">All interactive elements</p></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--alt-accent);"></div><div class="swatch-info"><p class="swatch-name">--alt-accent</p><p class="swatch-value">Hover states on accent</p></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--alt-background-neutral);"></div><div class="swatch-info"><p class="swatch-name">--alt-background-neutral</p><p class="swatch-value">Inputs, secondary buttons</p></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--alt-foreground-neutral);"></div><div class="swatch-info"><p class="swatch-name">--alt-foreground-neutral</p><p class="swatch-value">Placeholder, disabled text</p></div></div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 2. Typography ─────────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">2. Typography</h2>
+    <p class="section-desc">Monospace only. No sans-serif substitutions ever.</p>
+    <div>
+      <div class="type-row"><span class="type-meta">80px / normal</span><span style="font-size:80px;font-weight:normal;line-height:1;">Aa</span><span class="type-meta" style="align-self:center;">Splash screen</span></div>
+      <div class="type-row"><span class="type-meta">50px / normal</span><span style="font-size:50px;font-weight:normal;line-height:1.2;">Half Full</span><span class="type-meta" style="align-self:center;">App title H1</span></div>
+      <div class="type-row"><span class="type-meta">38px / 600</span><span style="font-size:38px;font-weight:600;line-height:1;">×</span><span class="type-meta" style="align-self:center;">Modal close ×</span></div>
+      <div class="type-row"><span class="type-meta">25px / normal</span><span style="font-size:25px;font-weight:normal;line-height:1.2;">Settings</span><span class="type-meta" style="align-self:center;">Header nav links</span></div>
+      <div class="type-row"><span class="type-meta">20px / 600</span><span style="font-size:20px;font-weight:600;line-height:1.2;">Modal Title</span><span class="type-meta" style="align-self:center;">Modal titles</span></div>
+      <div class="type-row"><span class="type-meta">18px / 600</span><span style="font-size:18px;font-weight:600;line-height:1.2;">Monday</span><span class="type-meta" style="align-self:center;">Day headers, form labels</span></div>
+      <div class="type-row"><span class="type-meta">16px / 400 (default)</span><span style="font-size:16px;font-weight:400;line-height:1.2;">Body text, buttons, inputs</span><span class="type-meta" style="align-self:center;">Default body</span></div>
+      <div class="type-row"><span class="type-meta">16px / 600</span><span style="font-size:16px;font-weight:600;line-height:1;">Task title text</span><span class="type-meta" style="align-self:center;">Task cards (line-height:1)</span></div>
+      <div class="type-row"><span class="type-meta">14px / 400</span><span style="font-size:14px;font-weight:400;line-height:1.2;color:var(--alt-foreground-neutral);">Filter item text</span><span class="type-meta" style="align-self:center;">Dense secondary data</span></div>
+      <div class="type-row"><span class="type-meta">12px / 600</span><span style="font-size:12px;font-weight:600;line-height:1.2;">Start Trial</span><span class="type-meta" style="align-self:center;">Compact badge labels</span></div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 3. Buttons ────────────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">3. Buttons</h2>
+    <p class="section-desc">Three-tier hierarchy. One primary per context. Primary uses <code>--foreground</code> text (not <code>--background</code> — see contrast rules).</p>
+    <div class="demo-row">
+      <div class="demo-col">
+        <p class="demo-label">Primary — accent bg, foreground text</p>
+        <button class="btn-primary"><span>Start Trial</span></button>
+        <button class="btn-primary"><span>Save</span></button>
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">Secondary — neutral bg</p>
+        <button class="btn-secondary">Save Changes</button>
+        <button class="btn-secondary">Cancel</button>
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">Tertiary — text only (nav links)</p>
+        <button class="btn-tertiary">Pattern</button>
+        <button class="btn-tertiary">Settings</button>
+        <button class="btn-tertiary">Schedule</button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 4. Inputs ─────────────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">4. Text Inputs</h2>
+    <p class="section-desc">No border — background contrast defines the field. Use label-container (column-reverse) pattern.</p>
+    <div class="demo-row">
+      <div class="demo-col">
+        <p class="demo-label">Standalone</p>
+        <input class="text-input" type="text" placeholder="Enter task name..." style="width:280px;">
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">label-container (column-reverse)</p>
+        <div class="label-container">
+          <input class="text-input" type="text" placeholder="e.g. 10" style="width:120px;">
+          <p>Reminder offset (min)</p>
+        </div>
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">Multiple label-containers (20px gap between)</p>
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div class="label-container"><input class="text-input" type="text" placeholder="username" style="width:220px;"><p>Username</p></div>
+          <div class="label-container"><input class="text-input" type="password" placeholder="••••••••" style="width:220px;"><p>Password</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 5. Dropdowns ──────────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">5. Dropdowns</h2>
+    <p class="section-desc">Same base style as inputs. border-width: 0.</p>
+    <div class="demo-row">
+      <div class="demo-col">
+        <p class="demo-label">Standalone</p>
+        <select class="dropdown"><option>Weekly</option><option>Daily</option><option>Monthly</option></select>
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">In label-container</p>
+        <div class="label-container">
+          <select class="dropdown"><option>Default (Courier New)</option><option>JetBrains Mono</option><option>Roboto Mono</option><option>Source Code Pro</option></select>
+          <p>Font family</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 6. Checkboxes ─────────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">6. Checkboxes</h2>
+    <p class="section-desc">Two variants: <strong>task checkboxes</strong> (solid block, no text label) and <strong>settings checkboxes</strong> (button-style with text inside). They use different color tokens.</p>
+
+    <div class="demo-row" style="margin-bottom:24px;">
+      <div class="demo-col">
+        <p class="demo-label">Task checkbox — unchecked (--foreground)</p>
+        <div class="task-chk-row">
+          <div class="task-chk-box task-chk-unchecked"></div>
+          <span>Task not done</span>
+        </div>
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">Task checkbox — hover (--alt-accent)</p>
+        <div class="task-chk-row">
+          <div class="task-chk-box task-chk-hovered"></div>
+          <span>About to check</span>
+        </div>
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">Task checkbox — checked (--accent)</p>
+        <div class="task-chk-row">
+          <div class="task-chk-box task-chk-checked"></div>
+          <span style="text-decoration:line-through;opacity:0.5;">Task complete</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="section-desc" style="margin-top:8px;">Settings / button-style checkboxes use <code>--alt-background</code> / <code>--alt-foreground</code> and display their label text inside the block.</p>
+    <div class="demo-row">
+      <div class="demo-col">
+        <p class="demo-label">Settings checkbox — off (--alt-background)</p>
+        <div class="settings-chk settings-chk-off">Bold titles</div>
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">Settings checkbox — on (--alt-foreground, --background text)</p>
+        <div class="settings-chk settings-chk-on">Bold titles</div>
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">In a settings row (with label)</p>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="settings-chk settings-chk-on">✓</div>
+          <span style="font-size:16px;">Enable notifications</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 7. Radio Buttons (Segmented Control) ──────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">7. Radio Buttons (Segmented Control)</h2>
+    <p class="section-desc">A horizontal row of button-style boxes — NOT circles with labels. Unselected: <code>--alt-background</code>. Selected: <code>--alt-foreground</code> with <code>--background</code> text. Arrow keys navigate.</p>
+    <div class="demo-col">
+      <p class="demo-label">Font family selector</p>
+      <div class="radio-buttons" role="radiogroup">
+        <div class="radio-btn radio-btn-on"  role="radio" onclick="selectRadio(this, 'font-radio')">Courier</div>
+        <div class="radio-btn radio-btn-off" role="radio" onclick="selectRadio(this, 'font-radio')">JetBrains</div>
+        <div class="radio-btn radio-btn-off" role="radio" onclick="selectRadio(this, 'font-radio')">Roboto</div>
+        <div class="radio-btn radio-btn-off" role="radio" onclick="selectRadio(this, 'font-radio')">Source</div>
+      </div>
+      <p class="demo-label" style="margin-top:8px;">Theme type selector</p>
+      <div class="radio-buttons" role="radiogroup">
+        <div class="radio-btn radio-btn-on"  role="radio" onclick="selectRadio(this, 'theme-radio')">accent</div>
+        <div class="radio-btn radio-btn-off" role="radio" onclick="selectRadio(this, 'theme-radio')">complement</div>
+        <div class="radio-btn radio-btn-off" role="radio" onclick="selectRadio(this, 'theme-radio')">two-tone</div>
+        <div class="radio-btn radio-btn-off" role="radio" onclick="selectRadio(this, 'theme-radio')">light</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 8. Modal ──────────────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">8. Modal</h2>
+    <p class="section-desc">Normally shown as a full-screen overlay with <code>backdrop-filter: blur(2px)</code>, <code>z-index: 100</code>. SlideIn 0.3s entrance animation.</p>
+    <div class="modal-inline">
+      <div class="modal-title-row">
+        <p class="modal-title-text">Repeating Task</p>
+        <span class="modal-close-btn">&times;</span>
+      </div>
+      <p class="modal-body-content">Configure how often this task should repeat. Changes apply to all future instances.</p>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:20px;">
+        <div class="label-container"><select class="dropdown"><option>Every day</option><option>Every weekday</option><option>Every week</option></select><p>Repeat frequency</p></div>
+        <div class="label-container"><input class="text-input" type="text" placeholder="e.g. 10" style="width:80px;"><p>End after (occurrences)</p></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary"><span>Save</span></button>
+        <button class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 9. Settings Page ───────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">9. Settings Page</h2>
+    <p class="section-desc">Tab navigation + option rows + version number at bottom. Appearance tab must include themeType, hue, and fontFamily controls.</p>
+    <div class="settings-panel">
+      <div class="settings-tab-buttons">
+        <button class="settings-tab-btn active-tab">General</button>
+        <button class="settings-tab-btn">Appearance</button>
+        <button class="settings-tab-btn">Tasks</button>
+      </div>
+      <div class="settings-tab-divider"></div>
+      <div class="settings-option">
+        <input class="settings-input" type="number" value="7">
+        <p>Days shown per week</p>
+      </div>
+      <div class="settings-option">
+        <input class="settings-input" type="number" value="15">
+        <p>Notification offset (min)</p>
+      </div>
+      <div class="settings-option">
+        <div class="settings-chk settings-chk-on">✓</div>
+        <p>Enable notifications</p>
+      </div>
+      <div class="settings-option">
+        <div class="settings-chk settings-chk-off">○</div>
+        <p>24 hour clock</p>
+      </div>
+      <!-- Version number: required at the bottom of every settings page -->
+      <p class="settings-version">v1.0.0</p>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 10. Context Menu ───────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">10. Context Menu</h2>
+    <p class="section-desc">border-radius: 10px, z-index: 100. Items have 1px alt-background dividers; last item has none.</p>
+    <div class="ctx-menu">
+      <div class="ctx-menu-item">Delete</div>
+      <div class="ctx-menu-item">Delete All</div>
+      <div class="ctx-menu-item">Stop Repeating</div>
+      <div class="ctx-menu-item">Rename</div>
+      <div class="ctx-menu-item">Repeating</div>
+      <div class="ctx-menu-item">Color</div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 11. Notification ──────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">11. Notification / Toast</h2>
+    <p class="section-desc">Centered at top, z-index: 300, pointer-events: none. Fades via opacity transition.</p>
+    <div class="demo-row">
+      <div class="notification-demo"><p>Task copied to clipboard</p></div>
+      <div class="notification-demo"><p>Pattern applied to 3 tasks</p></div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 12. Tooltip ───────────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">12. Tooltip</h2>
+    <p class="section-desc">Circular badge, ::after pseudo-element, opacity 0→1 on hover in 0.3s.</p>
+    <div class="demo-row" style="align-items:center;gap:20px;">
+      <div class="tooltip-demo" data-tip="Create patterns to customize tasks using just the title">?</div>
+      <div class="tooltip-demo" data-tip="Schedule tasks for the far future">S</div>
+      <div class="tooltip-demo" data-tip="Import from Google Calendar">i</div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 13. Task Cards ────────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">13. Task Cards</h2>
+    <p class="section-desc">Hover transitions border to --accent. Checked state: 50% opacity + strikethrough. Header variant: border-radius 100px.</p>
+    <div class="demo-row">
+      <div class="demo-col">
+        <p class="demo-label">Unchecked</p>
+        <div class="task-card">
+          <div class="task-chk-inner tc-unchecked"></div>
+          <p class="task-title">Write design docs</p>
+        </div>
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">Checked</p>
+        <div class="task-card task-card-checked">
+          <div class="task-chk-inner tc-checked"></div>
+          <p class="task-title">Completed task</p>
+        </div>
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">Header/pill (border-radius: 100px)</p>
+        <div class="task-card" style="border-radius:100px;border-width:2px;">
+          <p class="task-title" style="text-align:center;width:100%;">HEADER</p>
+        </div>
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">Frozen (dashed, 2px)</p>
+        <div class="task-card" style="border-style:dashed;border-width:2px;">
+          <div class="task-chk-inner tc-unchecked"></div>
+          <p class="task-title">Recurring task</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 14. Pattern Pills ─────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">14. Pattern / Tag Pills</h2>
+    <p class="section-desc">Border transitions to --accent on hover. Hidden patterns: opacity 0.5 + grayscale(35%).</p>
+    <div class="demo-row" style="flex-wrap:wrap;gap:8px;">
+      <div class="pattern-pill">Morning routine</div>
+      <div class="pattern-pill">Weekly review</div>
+      <div class="pattern-pill" style="opacity:0.5;filter:grayscale(35%);">Hidden pattern</div>
+      <div class="pattern-pill" style="border-color:var(--accent);">Active pattern</div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 15. Progress Bar ───────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">15. Progress Bar</h2>
+    <p class="section-desc">Accent fill, drains left via progressDrain 6s linear.</p>
+    <div class="demo-col">
+      <p class="demo-label">Static (65%)</p>
+      <div class="progress-container"><div class="progress-bar" style="width:65%;"></div></div>
+      <p class="demo-label" style="margin-top:12px;">Draining (animated)</p>
+      <div class="progress-container"><div class="progress-bar" style="animation:progressDrain 6s linear infinite;"></div></div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 16. Theme System ───────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">16. Theme System</h2>
+    <p class="section-desc">Every app must include themeType + hue controls. Use the sticky bar at the top of this page to see how all 28 combinations affect the design system.</p>
+    <div class="demo-row" style="flex-wrap:wrap;gap:32px;">
+      <div class="demo-col">
+        <p class="demo-label">Theme types</p>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:14px;">
+          <div><strong>accent</strong> — dark grey bg + colored accent (default)</div>
+          <div><strong>complement</strong> — hue-tinted dark bg</div>
+          <div><strong>two-tone</strong> — analogous shifted accent ±30°</div>
+          <div><strong>light</strong> — near-white bg + deep accent</div>
+        </div>
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">Hue options</p>
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:14px;">
+          <div style="display:flex;gap:8px;align-items:center;"><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:hsl(5,75%,50%);"></span> red (5°)</div>
+          <div style="display:flex;gap:8px;align-items:center;"><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:hsl(39,75%,50%);"></span> orange (39°)</div>
+          <div style="display:flex;gap:8px;align-items:center;"><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:hsl(60,75%,50%);"></span> yellow (60°)</div>
+          <div style="display:flex;gap:8px;align-items:center;"><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:hsl(130,75%,50%);"></span> green (130°)</div>
+          <div style="display:flex;gap:8px;align-items:center;"><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:hsl(180,75%,50%);"></span> blue (180°)</div>
+          <div style="display:flex;gap:8px;align-items:center;"><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:hsl(250,75%,50%);"></span> indigo (250°)</div>
+          <div style="display:flex;gap:8px;align-items:center;"><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:hsl(280,75%,50%);"></span> violet (280°) — default</div>
+        </div>
+      </div>
+      <div class="demo-col">
+        <p class="demo-label">Required Appearance settings</p>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="label-container"><select class="dropdown"><option>accent</option><option>complement</option><option>two-tone</option><option>light</option></select><p>Theme Type</p></div>
+          <div class="label-container"><select class="dropdown"><option>red</option><option>orange</option><option>yellow</option><option>green</option><option>blue</option><option>indigo</option><option selected>violet</option></select><p>Accent Hue</p></div>
+          <div class="label-container"><select class="dropdown"><option>Courier New</option><option>JetBrains Mono</option><option>Roboto Mono</option><option>Source Code Pro</option></select><p>Font Family</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <!-- ── 17. Color Contrast ─────────────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">17. Color Contrast</h2>
+    <p class="section-desc">WCAG AA requires 4.5:1 for normal text, 3:1 for large text. Check every text/background pair before shipping. Switch all 4 theme types to verify.</p>
+    <table class="contrast-table">
+      <thead>
+        <tr><th>Text token</th><th>Background token</th><th>Ratio (dark)</th><th>Status</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>--foreground</td><td>--background</td><td>~17:1</td><td class="pass">✅ PASS</td><td>Primary text on app bg</td></tr>
+        <tr><td>--foreground</td><td>--alt-background</td><td>~11:1</td><td class="pass">✅ PASS</td><td>Text on notifications, panels</td></tr>
+        <tr><td>--foreground</td><td>--alt-background-neutral</td><td>~11:1</td><td class="pass">✅ PASS</td><td>Text on inputs, secondary buttons</td></tr>
+        <tr><td>--foreground</td><td>--accent</td><td>~5.6:1</td><td class="pass">✅ PASS</td><td>Primary button text — use --foreground, NOT --background</td></tr>
+        <tr><td>--alt-foreground</td><td>--background</td><td>~5.8:1</td><td class="pass">✅ PASS</td><td>Secondary text on app bg</td></tr>
+        <tr><td>--alt-foreground</td><td>--alt-background</td><td>~4.5:1</td><td class="pass">✅ PASS (borderline)</td><td>Secondary text on panels</td></tr>
+        <tr><td>--alt-foreground-neutral</td><td>--alt-background-neutral</td><td>~4.1:1</td><td class="warn">⚠️ LARGE ONLY</td><td>Use ≥ 18px or weight ≥ 600 for this pair</td></tr>
+        <tr><td>--background</td><td>--accent</td><td>~2.6:1</td><td class="fail">❌ FAIL</td><td>Do NOT use --background text on accent bg</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:16px;padding:12px;background:var(--alt-background);border-radius:10px;font-size:14px;">
+      <strong>⚠️ Critical:</strong> The primary button must use <code>color: var(--foreground)</code> — never <code>color: var(--background)</code>. In dark mode, <code>--background</code> is near-black (~#262626) on medium-dark purple, which produces only ~2.6:1 contrast ratio and <strong>fails WCAG AA</strong>.
+    </div>
+  </section>
+
+  <hr class="separator">
+
+  <p style="font-size:14px;color:var(--alt-foreground-neutral);text-align:center;padding-bottom:40px;">
+    Half Full Design System — <code>design/showcase/index.html</code>
+  </p>
+
+  <script>
+    /* ── Theme engine (ported from src/js/functionality/themes.js) ────── */
+    function convertThemeToHue(hue) {
+      const map = { red: 5, orange: 39, yellow: 60, green: 130, blue: 180, indigo: 250, violet: 280 };
+      return map[hue] ?? 280;
+    }
+
+    function applyTheme(themeType, hue) {
+      const H = convertThemeToHue(hue);
+      const themes = {
+        accent: {
+          '--foreground': 'hsl(0,0%,100%)', '--background': 'hsl(0,0%,15%)',
+          '--alt-background': `hsl(${H},50%,30%)`, '--alt-foreground': `hsl(${H},75%,75%)`,
+          '--accent': `hsl(${H},75%,50%)`, '--alt-accent': `hsl(${H},75%,90%)`,
+          '--alt-background-neutral': 'hsl(0,0%,30%)', '--alt-foreground-neutral': 'hsl(0,0%,75%)',
+        },
+        complement: {
+          '--foreground': 'hsl(0,0%,100%)', '--background': `hsl(${H},15%,15%)`,
+          '--alt-background': `hsl(${H},50%,30%)`, '--alt-foreground': `hsl(${H},75%,75%)`,
+          '--accent': `hsl(${H},75%,50%)`, '--alt-accent': `hsl(${H},75%,90%)`,
+          '--alt-background-neutral': 'hsl(0,0%,30%)', '--alt-foreground-neutral': 'hsl(0,0%,75%)',
+        },
+        'two-tone': {
+          '--foreground': 'hsl(0,0%,100%)', '--background': `hsl(${H},0%,10%)`,
+          '--alt-background': `hsl(${H},50%,35%)`, '--alt-foreground': `hsl(${H-30},75%,70%)`,
+          '--accent': `hsl(${H+30},75%,50%)`, '--alt-accent': `hsl(${H+30},75%,90%)`,
+          '--alt-background-neutral': 'hsl(0,0%,30%)', '--alt-foreground-neutral': 'hsl(0,0%,75%)',
+        },
+        light: {
+          '--foreground': 'hsl(0,0%,0%)', '--background': 'hsl(0,0%,95%)',
+          '--alt-background': `hsl(${H},35%,75%)`, '--alt-foreground': `hsl(${H},100%,30%)`,
+          '--accent': `hsl(${H},100%,35%)`, '--alt-accent': `hsl(${H},100%,75%)`,
+          '--alt-background-neutral': 'hsl(0,0%,75%)', '--alt-foreground-neutral': 'hsl(0,0%,30%)',
+        },
+      };
+      const t = themes[themeType] ?? themes.accent;
+      Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
+      document.body.style.background = t['--background'];
+      document.documentElement.style.background = t['--background'];
+    }
+
+    function applyThemeFromUI() {
+      const type = document.getElementById('themeType').value;
+      const hue  = document.getElementById('themeHue').value;
+      applyTheme(type, hue);
+    }
+
+    /* ── Radio button click handler ──────────────────────────────────── */
+    function selectRadio(el, group) {
+      const container = el.closest('.radio-buttons');
+      if (!container) return;
+      container.querySelectorAll('.radio-btn').forEach(btn => {
+        btn.classList.remove('radio-btn-on');
+        btn.classList.add('radio-btn-off');
+      });
+      el.classList.remove('radio-btn-off');
+      el.classList.add('radio-btn-on');
+    }
+  </script>
+</body>
+</html>

@@ -4,37 +4,37 @@ import * as ImagePicker from 'expo-image-picker';
 import { Router, useRouter } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  Button, Image, Modal, Platform,
+  Animated, Image, Modal, Platform,
   Pressable,
   SafeAreaView, StatusBar, StyleSheet,
   Text, TextInput,
   useWindowDimensions, View
 } from 'react-native';
+import AppButton from '../components/AppButton';
 import MediaElement from '../components/element';
-import { backgroundColor, Media } from '../util/constants';
+import { Media } from '../util/constants';
+import { fontFamily, tokens } from '../util/tokens';
 
-const MEDIA_KEY = '@MyPhotoGallery:mediaItems'; // A unique key for your app's data
+const MEDIA_KEY = '@MyPhotoGallery:mediaItems';
 
-// Function to save your array of media item objects
 async function saveMediaItems(items: Media[]) {
   try {
     const jsonValue = JSON.stringify(items);
     await AsyncStorage.setItem(MEDIA_KEY, jsonValue);
     console.log('media saved');
-  } 
+  }
   catch (e) {
     console.error('Error saving media:', e);
   }
 }
 
-// Function to load your array of media item objects
 async function loadMediaItems(): Promise<Media[]> {
   try {
     const jsonValue = await AsyncStorage.getItem(MEDIA_KEY);
     return jsonValue != null ? JSON.parse(jsonValue) : [];
-  } 
+  }
   catch (e) {
     console.error('Error loading media references:', e);
     return [];
@@ -64,7 +64,7 @@ type FullscreenElementProps = {
 function FullscreenElement({item, setFullscreenItem, router}: FullscreenElementProps) {
   const {width, height} = useWindowDimensions();
   const [rotate, setRotate] = useState<boolean>(false);
-  
+
   useEffect(() => {
     if (rotate) {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
@@ -98,11 +98,11 @@ function FullscreenElement({item, setFullscreenItem, router}: FullscreenElementP
     default:
       return <>
         <View style={[styles.media]}>
-          <VideoView style={[styles.media, {zIndex: 50}]} player={player} contentFit='contain' nativeControls={false} />
+          <VideoView style={[styles.media, {zIndex: tokens.zTray}]} player={player} contentFit='contain' nativeControls={false} />
         </View>
         <Text style={styles.fullscreenRotate} onPress={() => {setRotate(!rotate)}}>&#8635;</Text>
-        <View style={{backgroundColor: 'transparent', zIndex: 100, width, height, position: 'absolute'}}></View>
-      </> 
+        <View style={{zIndex: tokens.zModal, width, height, position: 'absolute'}}></View>
+      </>
   }
 };
 
@@ -112,6 +112,7 @@ export default function HomeScreen() {
   const [website, setWebsite] = useState<string>("");
   const [fullscreenItem, setFullscreenItem] = useState<Media | null>(null);
   const router = useRouter();
+  const fullscreenScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const fetchStoredMedia = async () => {
@@ -147,16 +148,22 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.AndroidSafeArea}>
       <View style={[styles.modalButtonContainer, {justifyContent: 'center'}]}>
-        <Button onPress={() => setShowWebsite(true)} color={'purple'} title='Website' />
-        <Button onPress={pickMedia} color={'purple'} title='Image/Video' />
+        <AppButton onPress={() => setShowWebsite(true)} title='Website' />
+        <AppButton onPress={pickMedia} title='Image/Video' />
       </View>
-      <MasonryList data={mediaItems} numColumns={2} keyExtractor={(item) => item.uri} 
+      <MasonryList data={mediaItems} numColumns={2} keyExtractor={(item) => item.uri}
         contentContainerStyle={styles.gridContainer} ListFooterComponent={<View style={{height: 40}}></View>}
         renderItem={({item, i}) => <MediaElement index={i} item={item as Media} mediaItems={mediaItems}
-          setMediaItems={setMediaItems} setFullscreenItem={setFullscreenItem} saveMediaItems={saveMediaItems} />} 
+          setMediaItems={setMediaItems} setFullscreenItem={setFullscreenItem} saveMediaItems={saveMediaItems} />}
       />
-      {fullscreenItem && <Pressable onPress={() => {setFullscreenItem(null)}} style={styles.fullScreenContainer}>
-        <FullscreenElement setFullscreenItem={setFullscreenItem} item={fullscreenItem} router={router} />
+      {fullscreenItem && <Pressable
+        onPress={() => {setFullscreenItem(null)}}
+        onPressIn={() => Animated.timing(fullscreenScale, { toValue: 0.95, duration: 125, useNativeDriver: true }).start()}
+        onPressOut={() => Animated.timing(fullscreenScale, { toValue: 1, duration: 125, useNativeDriver: true }).start()}
+        style={styles.fullScreenContainer}>
+        <Animated.View style={{flex: 1, width: '100%', transform: [{scale: fullscreenScale}]}}>
+          <FullscreenElement setFullscreenItem={setFullscreenItem} item={fullscreenItem} router={router} />
+        </Animated.View>
       </Pressable>}
       <Modal animationType="fade" transparent={true} visible={showWebsite}
         onRequestClose={() => setShowWebsite(false)}>
@@ -164,14 +171,14 @@ export default function HomeScreen() {
           <View style={styles.modalView}>
             <TextInput style={styles.websiteInput} value={website} onChangeText={setWebsite} />
             <View style={styles.modalButtonContainer}>
-              <Button title='Add' onPress={() => {
+              <AppButton title='Add' onPress={() => {
                 let websiteUri = website;
                 if (!websiteUri.includes("http")) {
                   websiteUri = "https://" + websiteUri;
                 }
                 const newWebsite: Media = {
                   uri: websiteUri, type: 'website',
-                  width: 100, 
+                  width: 100,
                   height: 100,
                   rotation: 0,
                   id: Date.now().toString() + Math.random().toString(),
@@ -182,7 +189,7 @@ export default function HomeScreen() {
                 saveMediaItems(updatedMediaItems);
                 setShowWebsite(false);
               }} />
-              <Button onPress={() => setShowWebsite(false)} title='Cancel' />
+              <AppButton onPress={() => setShowWebsite(false)} title='Cancel' variant='secondary' />
             </View>
           </View>
         </View>
@@ -198,53 +205,59 @@ const styles = StyleSheet.create({
     display: 'flex',
     flex: 1,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-    backgroundColor: backgroundColor,
+    backgroundColor: tokens.background,
   },
   gridContainer: {
     width: '100%',
-    marginVertical: 10,
+    marginVertical: tokens.space6,
   },
   mediaContainer: {
-    margin: 5,
-    borderRadius: 5,
+    margin: tokens.space3,
+    borderRadius: tokens.radiusSm,
     overflow: 'hidden',
   },
   media: {
     width: '100%',
     height: '100%',
-    borderRadius: 5,
+    borderRadius: tokens.radiusSm,
   },
   fullScreenContainer: {
-    backgroundColor: backgroundColor,
+    backgroundColor: tokens.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
   fullscreenRotate: {
     position: 'absolute',
-    top: 10,
-    left: 10,
-    paddingBottom: 10,
-    height: 50,
-    width: 50,
-    borderRadius: 15,
-    backgroundColor: 'grey',
-    fontSize: 30,
-    zIndex: 150,
+    top: tokens.space6,
+    left: tokens.space6,
+    paddingBottom: tokens.space6,
+    height: tokens.space13,
+    width: tokens.space13,
+    borderRadius: tokens.radiusLg,
+    backgroundColor: tokens.altBackgroundNeutral,
+    fontSize: tokens.fontSizeXl,
+    fontFamily,
+    color: tokens.foreground,
+    zIndex: tokens.zTooltipDesc,
     textAlign: 'center',
     textAlignVertical: 'center',
   },
   modalButtonContainer: {
     flexDirection: 'row',
     width: '100%',
-    gap: 30,
+    gap: tokens.space11,
   },
   websiteInput: {
-    color: 'black',
-    backgroundColor: 'white',
+    color: tokens.foreground,
+    backgroundColor: tokens.altBackgroundNeutral,
     width: 200,
-    borderRadius: 10,
-    marginBottom: 15,
-    fontSize: 18,
+    borderRadius: tokens.radiusLg,
+    marginBottom: tokens.space8,
+    fontSize: tokens.fontSizeMd,
+    fontFamily,
+    borderWidth: 1,
+    borderColor: tokens.foreground,
+    paddingHorizontal: tokens.space5,
   },
   centeredView: {
     flex: 1,
@@ -253,9 +266,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalView: {
-    backgroundColor: 'grey',
-    borderRadius: 15,
+    backgroundColor: tokens.background,
+    borderRadius: tokens.radiusLg,
     alignItems: 'center',
-    padding: 30,
+    padding: tokens.space11,
+    borderWidth: 2,
+    borderColor: tokens.foreground,
   },
 });

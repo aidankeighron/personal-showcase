@@ -2,7 +2,7 @@
   "expo": {
     "name": "Personal Showcase",
     "slug": "personal-showcase",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "default",
     "icon": "./assets/images/favicon.png",
     "scheme": "personalshowcase",
@@ -23,7 +23,7 @@
           "image": "./assets/images/favicon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#262626"
         }
       ],
       "expo-video"

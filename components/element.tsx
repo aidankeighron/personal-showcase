@@ -1,8 +1,10 @@
 import * as VideoThumbnails from 'expo-video-thumbnails';
-import { useEffect, useState } from 'react';
-import { Button, Image, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Image, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { WebView } from 'react-native-webview';
+import AppButton from './AppButton';
 import { Media } from '../util/constants';
+import { fontFamily, tokens } from '../util/tokens';
 
 
 type MediaElementProps = {
@@ -10,7 +12,7 @@ type MediaElementProps = {
   item: Media,
   mediaItems: Media[],
   setMediaItems: React.Dispatch<React.SetStateAction<Media[]>>,
-  saveMediaItems: {(items: Media[]): Promise<void>},
+  saveMediaItems: (items: Media[]) => Promise<void>,
   setFullscreenItem: React.Dispatch<React.SetStateAction<Media | null>>,
 }
 
@@ -19,7 +21,8 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
   const [order, setOrder] = useState<string>(index.toString());
   const {width: screenWidth} = useWindowDimensions();
   const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
-  
+  const scale = useRef(new Animated.Value(1)).current;
+
   const itemWidth = item.rotation === 0 ? item.width : item.height;
   const itemHeight = item.rotation === 0 ? item.height : item.width;
 
@@ -36,7 +39,7 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
   }
 
   const displayMedia = () => {
-    const cardWidth = 100; // Your desired card width
+    const cardWidth = 100;
     const initialScale = cardWidth / screenWidth;
     const injectedJavaScript = `
       const meta = document.createElement('meta');
@@ -53,12 +56,12 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
       case 'image':
         return <Image source={{uri: item.uri}} style={styles.media} resizeMode='contain' />
       default:
-        return (videoThumbnail ? 
+        return (videoThumbnail ?
           <>
             <Image source={{uri: videoThumbnail}} style={styles.media} resizeMode='contain' />
-            <Text style={{position: 'absolute', color: 'black', backgroundColor: 'white', paddingHorizontal: 2, fontSize: 10}}>Video</Text>
+            <Text style={{position: 'absolute', color: tokens.foreground, backgroundColor: tokens.altBackgroundNeutral, paddingHorizontal: tokens.space1, fontSize: tokens.fontSizeXs, fontFamily}}>Video</Text>
           </>
-          : <View style={[styles.media, {backgroundColor: 'grey'}]}></View>)
+          : <View style={[styles.media, {backgroundColor: tokens.altBackgroundNeutral}]}></View>)
     }
   }
 
@@ -84,31 +87,37 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
         return reorderedItems;
       });
       setShowElementModal(false);
-    } 
+    }
     else {
       alert('Please enter a valid index within the current range.');
     }
   };
 
   return (
-    <Pressable style={[styles.mediaContainer, {height: (screenWidth/2 - 10) * itemHeight/itemWidth}]}
-    onLongPress={() => { setShowElementModal(true) }} onPress={() => { setFullscreenItem(item) }}>
-      {displayMedia()}
+    <Pressable
+      style={[styles.mediaContainer, {height: (screenWidth/2 - 10) * itemHeight/itemWidth}]}
+      onLongPress={() => { setShowElementModal(true) }}
+      onPress={() => { setFullscreenItem(item) }}
+      onPressIn={() => Animated.timing(scale, { toValue: 0.95, duration: 125, useNativeDriver: true }).start()}
+      onPressOut={() => Animated.timing(scale, { toValue: 1, duration: 125, useNativeDriver: true }).start()}>
+      <Animated.View style={{flex: 1, transform: [{scale}]}}>
+        {displayMedia()}
+      </Animated.View>
       <Modal animationType="fade" transparent={true} visible={showElementModal}
         onRequestClose={() => setShowElementModal(false)}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <TextInput value={order} onChangeText={setOrder} style={styles.websiteInput}  />
             <View style={styles.modalButtonContainer}>
-              <Button title='Delete' onPress={() => {
+              <AppButton title='Delete' variant='secondary' onPress={() => {
                 deleteItem();
                 setShowElementModal(false);
               }} />
-              <Button title='Reorder' onPress={() => {
+              <AppButton title='Reorder' onPress={() => {
                 handleReorder();
                 setShowElementModal(false);
               }} />
-              <Button onPress={() => { setShowElementModal(false) }} title='Cancel' />
+              <AppButton onPress={() => { setShowElementModal(false) }} title='Cancel' variant='secondary' />
             </View>
           </View>
         </View>
@@ -119,27 +128,31 @@ export default function MediaElement({index, item, mediaItems, setMediaItems, sa
 
 const styles = StyleSheet.create({
   mediaContainer: {
-    margin: 5,
-    borderRadius: 5,
+    margin: tokens.space3,
+    borderRadius: tokens.radiusSm,
     overflow: 'hidden',
   },
   media: {
     width: '100%',
     height: '100%',
-    borderRadius: 5,
+    borderRadius: tokens.radiusSm,
   },
   modalButtonContainer: {
     flexDirection: 'row',
     width: '100%',
-    gap: 30,
+    gap: tokens.space11,
   },
   websiteInput: {
-    color: 'black',
-    backgroundColor: 'white',
+    color: tokens.foreground,
+    backgroundColor: tokens.altBackgroundNeutral,
     width: 200,
-    borderRadius: 10,
-    marginBottom: 15,
-    fontSize: 18,
+    borderRadius: tokens.radiusLg,
+    marginBottom: tokens.space8,
+    fontSize: tokens.fontSizeMd,
+    fontFamily,
+    borderWidth: 1,
+    borderColor: tokens.foreground,
+    paddingHorizontal: tokens.space5,
   },
   centeredView: {
     flex: 1,
@@ -148,9 +161,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalView: {
-    backgroundColor: 'grey',
-    borderRadius: 15,
+    backgroundColor: tokens.background,
+    borderRadius: tokens.radiusLg,
     alignItems: 'center',
-    padding: 30,
+    padding: tokens.space11,
+    borderWidth: 2,
+    borderColor: tokens.foreground,
   },
 });
