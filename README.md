@@ -2,6 +2,8 @@
 
 A basic app that lets you have quick access to photos, videos or website to showcase your cool stuff.
 
+![Demo](demo.png)
+
 ## Runing
 
 ```bash
