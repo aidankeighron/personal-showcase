@@ -60,7 +60,7 @@ type FullscreenElementProps = {
 }
 function FullscreenElement({item}: FullscreenElementProps) {
   const {width, height} = useWindowDimensions();
-  const [rotate, setRotate] = useState<boolean>(false);
+  const [rotate, setRotate] = useState<boolean>(item.type !== 'image');
 
   useEffect(() => {
     if (rotate) {
@@ -216,14 +216,14 @@ const styles = StyleSheet.create({
   },
   fullscreenRotate: {
     position: 'absolute',
-    top: tokens.space6,
+    top: (Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0) + tokens.space8,
     left: tokens.space6,
     paddingBottom: tokens.space6,
-    height: tokens.space13,
-    width: tokens.space13,
+    height: 56,
+    width: 56,
     borderRadius: tokens.radiusLg,
     backgroundColor: tokens.altBackgroundNeutral,
-    fontSize: tokens.fontSizeXl,
+    fontSize: 32,
     fontFamily,
     color: tokens.foreground,
     zIndex: tokens.zTooltipDesc,
